@@ -7,9 +7,48 @@ Welcome to UnrealROX's documentation!
 =====================================
 
 .. toctree::
-   :maxdepth: 2
-   :caption: Contents:
+   :maxdepth: 2 
+   :caption: Getting Started
 
+   _site/getting_started/welcome
+   _site/getting_started/quickstart
+
+.. toctree::
+    :maxdepth: 2
+    :caption: UnrealROX Plugin
+    
+    _site/plugin/installation
+    _site/plugin/basicusage
+    _site/plugin/recording
+    _site/plugin/playback
+
+.. toctree::
+   :maxdepth: 2
+   :numbered:
+   :caption: UnrealROX Architecture
+
+   _site/architecture/system
+
+.. toctree::
+	:maxdepth: 2
+	:caption: Troubleshooting
+
+	_site/troubleshooting
+
+.. toctree::
+	:maxdepth: 2
+	:numbered:
+	:caption: Changelog
+
+	_site/changelog
+
+.. toctree::
+	:maxdepth: 2
+	:caption: Contact
+
+	_site/contact
+
+	
 
 
 Indices and tables
