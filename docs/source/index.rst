@@ -43,7 +43,6 @@ Welcome to UnrealROX's documentation!
 	_site/changelog
 
 .. toctree::
-	:maxdepth: 2
 	:caption: Contact
 
 	_site/contact
