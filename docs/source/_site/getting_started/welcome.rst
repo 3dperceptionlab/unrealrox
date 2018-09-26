@@ -11,10 +11,24 @@ UnrealROX is an extremely photorealistic virtual reality environment built over 
 Our motivation
 ==============
 
-We aim to provide a large-scale photorealistic dataset leveraging hyperrealistic indoor scenes that are explored by a robot agent which also interact with objects in a visually realistic manner. Bla bla...
+State-of-the-art deep learning architectures need large amounts of accurately annotated data for achieving a good performance. The lack of large-scale datasets which provide accurate ground truth (e.g. semantic segmentation, depth and normal maps, etc.) is mainly because data annotation is tedious and time-consuming. Because of that, photorealistic virtual reality environments are becoming increasingly popular and widely used to generate huge amounts of data with an accurate ground truth.
+
+Taking advantage of this trend, we aim to provide a large-scale photorealistic dataset of indoor scenes where different robots can explore, manipulate, and interact with different objects. 
+
+
+UnrealROX features
+==================
+
+1. Grasping system for robot manipulation is independent of the object geometry and orientation, allowing the robot to adopt different finger configurations.
+2. Available both for Oculus Rift and HTC Vide Pro.
+3. After recording, all scene, robot and camera information can be exported to a JSON file from Unreal Engine 4 (UE4)
+4. With the JSON file and the unchanged scene where the sequence was recorded, you are able to generate the data you need. 
+5. Scene cameras are fully configurable. You can place different cameras in the scene and also attach them to specific robot joints. 
+6. This project is open-source. Anyone is welcome to contribute!
+
 
 
 Our contribution
 ================
 
-In contrast with state-of-the art approaches/ with current datasets.... 
+To the best of our knowledge, UnrealROX is the first photorealistic virtual reality environment based on Unreal Engine 4 and used for generating synthetic data for various robotic vision tasks.
