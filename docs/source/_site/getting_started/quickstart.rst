@@ -3,24 +3,97 @@ Quickstart
 **********
 
 .. _pivot tool: https://www.unrealengine.com/marketplace/pivot-tool
+.. _UnrealROX github: https://github.com/3dperceptionlab/unrealrox
+
+The main purpose of this tutorial is teaching you to successfully use UnrealROX in your scene.
+Note: this tutorial was done with Unreal Engine 4.18. We cannot guarantee UnrealROX work properly with other UE version.
+
+Hardware and software prerequisites
+###################################
+
+1. **Software**:
+
+	1.1 **Unreal Engine 4.18**. This tutorial was done with Unreal Engine 4.18. We cannot guarantee UnrealROX work properly with other UE versions.
+
+	2.1 **Visual Studio**. In order to compile UnrealROX you will need Visual Studio. We recommend to launch Unreal Engine from Visual Studio selecting *robotrix* as starting point (important to avoid compiling the entire engine) and compiling the project in *Development editor* mode for a better performance.  
 
 
-This is a short tutorial with the main purpose of teaching you to use UnrealROX in your scene. In order to get started you need to perform the following steps:
+2. **Hardware**:
 
-1. First of all you need a UE4 scene as photorealistic as possible to impress your boss! 
+	2.1. **GPU**. Make sure your GPU driver is well installed and updated. You need a good GPU to run smoothly a photorealistic scene alongside UnrealROX system.
 
-Do this for each scene you want to use
-######################################
+	2.2 **Overall hardware requirements**. For a smooth experience in photorealistic virtual environments rendered by Unreal Engine we recommend a good performance hardware configuration. 
 
-2. Run your scene and check that all object pivots are placed on the geometrical center of its meshes for configure X and Y axis (Note: Z axis should be 0 for a better interaction with some objects). This is important to track all the objects correctly during the recording and playback steps. However, this is a tedious task thus realistic scenes have lots of objects. Due to, we use the following `pivot tool`_ which works like a charm.
-3. Choose the object you want to interact with from the World Outlier (by default placed on the right side in the UE4 editor) and do the following:
-	1. Go to Transform->Mobility and set the object to Movable. Almost all the objects are static by default.
-	2. Go to Physics and check Simulate Physics option.
-	3. Go to Collision and check Generate Overlap Events option. This is a must for the grasping system in order to grab an object correctly. If this option is disabled, grasping wouldn't work.
-	4. You also need to check object geometry to achieve a visually plausible grasping. Right-click on the object and Edit. In the Object Editor you need to visualize the simple and complex collision meshes and visually check its accuracy. If object geometry is complex and the collision mesh is rough, you maybe can improve this by auto generating convex collision (Collision menubar->Auto Convex Collision) with maximum hull verts and accuracy. You also need to set for complex object geometries the Collision Complexity to "Use simple collision as complex". This is to achieve a more realistic grasping, however, physics simulation is much more complicated and when interacting with two or more objects you may notice an unstable behavior.
-4. Now you need to build project lighting! The steps above are very important, especially the step of setting the objects as movable. You need to set lighting configuration according to your PC specs. For a fast and feasible lighting generation we recommend the following configuration you can do in the World Settings-> Lightmass. See the following figure.
+	2.3 **VR headset**. Check if Oculus VR and/or HTC Vive PRO perform properly and if their installation and calibration was done correctly to achieve a good tracking.
+
+3. **You are ready for the next step!**
 
 
-.. image:: /_static/lightmass.jpg
-  :width: 400
-  :alt: Lightmass configuration
+After checking prerequisites section and in order to get started with UnrealROX you need to perform the following steps:
+
+
+How to import your scene to UnrealROX
+#####################################
+
+The straightforward way to use UnrealROX is importing your own scene to the project. To correctly integrate your project with UnrealROX you need to proceed with the following steps:
+
+1. **Get UnrealROX**. Clone or download `UnrealROX github`_.
+
+2. **Migrate your scene**. Localize *.umap* file of your scene in the Content Browser, *right-click* and go to *Asset Actions->Migrate*. Now you need to navigate to the *Content* folder of UnrealROX project and select it as target for migrating your scene. 
+
+3. **Put the robot in your scene**. The last step is to put the robot in your scene. In the Content Browser navigate to *Mannequin->Meshes* and select your pawn (e.g. *ROXMannequinPawn*) and drag it to the scene. You can scale your robot to match with your scene scale.
+
+4. **You are ready for the next step!**
+
+
+How to configure your scene
+###########################
+
+Once your scene is integrated with UnrealROX project, you need to do the following steps:
+
+1. **Impress your boss**. First of all you need a UE4 scene as photorealistic as possible to impress your boss!
+
+2. **Check object pivots**. Run your scene and check that all object pivots are placed on the geometrical center of its meshes for configure X and Y axis (Note: Z axis should be 0 for a better interaction with some objects). This is important to track all the objects correctly during the recording and playback steps. However, this is a tedious task thus realistic scenes have lots of objects. Due to, we use the following `pivot tool`_ which works like a charm.
+
+3. **Configure interactable objects**. Choose the object you want to interact with from the World Outlier (by default placed on the right side in the UE4 editor) and do the following:
+
+	3.1. **You need object to be movable**. Go to *Transform->Mobility* and set the object to *Movable*. Almost all the objects are static by default.
+
+	3.2. **You need physics simulation**. Go to *Physics* and check *Simulate Physics* option.
+	
+	3.3. **You need overlap events**. Go to *Collision* and check *Generate Overlap Events* option. **This is a must** for the grasping system in order to grab an object correctly. If this option is disabled, grasping wouldn't work.
+	
+	3.4. **You need an accurate collision mesh**. You also need to check object geometry to achieve a visually plausible grasping. *Right-click* on the object and *Edit*. In the *Object Editor* you need to visualize the simple and complex collision meshes and visually check its accuracy. If object geometry is complex and the collision mesh is rough, you should improve this by auto generating convex collision (go to editor menubar and *Collision->Auto Convex Collision*) with maximum hull verts and accuracy. For the objects with a complex geometry you should set the *Collision Complexity* to *Use simple collision as complex*. In this way you will achieve a more realistic grasping, however, physics simulation will be much more complicated so when interacting with two or more objects you may notice an unstable behavior.
+
+4. **Build scene lighting**. Now you need to build project lighting! The steps above are very important, especially the step of setting the objects as movable. You need to set lighting configuration according to your PC specs. By default, lighting configuration is too demanding for a mid-high range computer. For a fast and feasible lighting generation we recommend the following configuration you can do in the *World Settings->Lightmass*. See the Figure 1.
+
+
+.. figure:: /_static/lightmass.jpg
+    :scale: 75 %
+    :align: center
+    :alt: Scene light configuration we used to build lighting and produce photorealistic results.
+    :figclass: align-center
+
+    Figure 1. Scene light configuration we used to build lighting and produce photorealistic results.
+
+5. **Scene ready to record your own sequences!**
+
+
+
+OculusVR and HTC Vive PRO controllers
+#####################################
+
+In this section we will describe the input map for OculusVR and HTC Vive PRO controllers. Figure 2 is a representation of Oculus controllers with the function of each button.
+
+TODO: change the figure including the proper robot's actions
+
+.. figure:: /_static/oculus_controllers.png
+    :scale: 100 %
+    :align: center
+    :alt: Oculus controller representation with the correspondence between the robot actions and cotroller buttons.
+    :figclass: align-center
+
+    Figure 2. Oculus controllers representation with the correspondence between the robot actions and cotroller buttons.
+
+
+Robot head is attached to the VR headset tracking user's head position. This entails some problems such as, user's height. You will need to configure camera position according with your height.
