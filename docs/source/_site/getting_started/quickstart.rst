@@ -116,3 +116,22 @@ TODO: HTC Vive PRO controllers
 
 
 *Note*: Robot head is attached to the VR headset tracking user's head position. This entails some problems such as, user's height. You will need to configure camera position according with your height before recording.
+
+
+Record your own dataset
+#######################
+
+Acomplishing with above instructions you will be able now to record your own dataset. Scene information (e.g. camera and objects pose and orientation) is dumped using .txt format and stored by default on the **FILL** folder. When you are recording, a red message will appear on the screen. You can begin and stop recording in each moment. When you restart the level, recording process automatically stops. For more information go to *UnrealROX Plugin->Recording* section.
+
+
+Generate ground truth for your record
+#####################################
+
+This is the final step of this tutorial. Here you will generate the ground truth (e.g. semantic segmentation and depths maps, normal maps, stereo pairs, and also instance segmentation, etc.) for your recorded sequence. First of all, you need to convert the .txt file which is the output of recording module to JSON format which is the input to playback module. For this purpose, you can use the script *scenetojson.py* which will perfectly do this step for you. You also will get information such as, sequence length in seconds, fps, and total frames. 
+
+In order to proceed with the playback process, you will need to uncheck *Record mode*. You need to search ROXTracker in the *World Outlier* and locate "Recording configuration section". For a more detailed information, see *UnrealROX->Recording* section. After this brief configuration you can run the process in the *Selected Viewport* mode. All the data will be saved on **FILL** folder.
+
+Note: If your main purpose is to generate data and run the project in *VR Preview* mode, UnrealROX wouldn't work properly.
+
+
+"That's all Folks!"
