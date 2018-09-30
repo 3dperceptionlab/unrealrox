@@ -1,0 +1,34 @@
+{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "0.1",
+	"FriendlyName": "Bulk Modify Bone",
+	"Description": "New Anim Node to modify multiple bone transforms at once",
+	"Category": "Animation",
+	"CreatedBy": "vorixo",
+	"CreatedByURL": "https://www.linkedin.com/in/vorixo",
+	"DocsURL": "",
+	"MarketplaceURL": "",
+	"SupportURL": "",
+	"CanContainContent": true,
+	"IsBetaVersion": true,
+	"Installed": false,
+	"Modules": [
+		{
+			"Name": "AnimNode",
+			"Type": "Runtime",
+			"LoadingPhase": "Default",
+			"AdditionalDependencies": [
+				"AnimGraphRuntime"
+			]
+		},
+		{
+			"Name": "AnimNodeEditor",
+			"Type": "Editor",
+			"LoadingPhase": "Default",
+			"AdditionalDependencies": [
+				"AnimGraph"
+			]
+		}
+	]
+}

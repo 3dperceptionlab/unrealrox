@@ -1,0 +1,41 @@
+Intermediate
+Binaries
+DerivedDataCache
+Saved
+Screenshots
+
+data
+SceneText/*.txt
+SceneText/*.json
+SceneText/**/*.txt
+SceneText/**/*.json
+*.VC.db
+*.opensdf
+*.opendb
+*.sdf
+*.sln
+*.suo
+
+# Visual Studio Cache
+.vs
+
+# Plugins
+Plugins/**/Intermediate
+Plugins/**/Binaries
+
+Config/DefaultEditorPerProjectUserSettings.ini
+
+# Builds
+Build
+!Build/Windows
+
+# Other Files
+server.bat
+
+# Steam Deploy
+Lib/Steam/*
+!Lib/Steam/steamcmd.exe
+Lib/SteamScripts/*
+
+!*.keep
+!Plugins/Runtime/Substance/Libs/**/*
