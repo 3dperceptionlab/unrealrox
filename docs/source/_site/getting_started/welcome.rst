@@ -20,7 +20,7 @@ UnrealROX features
 ==================
 
 1. Grasping system for robot manipulation is independent of the object geometry and orientation, allowing the robot to adopt different finger configurations.
-2. Available both for Oculus Rift and HTC Vide Pro.
+2. Available for both Oculus Rift and HTC Vive Pro.
 3. After recording, all scene, robot and camera information can be exported to a JSON file from Unreal Engine 4 (UE4)
 4. With the JSON file and the unchanged scene where the sequence was recorded, you are able to generate the data you need. 
 5. Scene cameras are fully configurable. You can place different cameras in the scene and also attach them to specific robot joints. 

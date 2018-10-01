@@ -53,7 +53,7 @@ Once your scene is integrated with UnrealROX project, you need to do the followi
 
 1. **Impress your boss**. First of all you need a UE4 scene as photorealistic as possible to impress your boss!
 
-2. **Check object pivots**. Run your scene and check that all object pivots are placed on the geometrical center of its meshes for configure X and Y axis (Note: Z axis should be 0 for a better interaction with some objects). This is important to track all the objects correctly during the recording and playback steps. However, this is a tedious task thus realistic scenes have lots of objects. Due to, we use the following `pivot tool`_ which works like a charm.
+2. **Check object pivots**. Run your scene and check that all object pivots are placed on the geometrical center of its meshes for configure X and Y axis (Note: Z axis should be 0 for a better interaction with some objects). This is important to track all the objects correctly during the recording and playback steps. However, this is a tedious task thus realistic scenes have lots of objects. Due to this, we use the plugin `pivot tool`_ which works like a charm (we don't include it in the project because of license conflicts).
 
 3. **Configure interactable objects**. Choose the object you want to interact with from the World Outlier (by default placed on the right side in the UE4 editor) and do the following:
 
