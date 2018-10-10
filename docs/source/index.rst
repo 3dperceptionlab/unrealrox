@@ -15,17 +15,17 @@ Welcome to UnrealROX's documentation!
 
 .. toctree::
     :maxdepth: 2
-    :caption: UnrealROX Plugin
+    :caption: UnrealROX Project
     
-    _site/plugin/requirements
-    _site/plugin/installation
-    _site/plugin/basicusage
-    _site/plugin/recording
-    _site/plugin/playback
+    _site/project/general
+    _site/project/requirements
+    _site/project/installation
+    _site/project/basicusage
+    _site/project/recording
+    _site/project/playback
 
 .. toctree::
    :maxdepth: 2
-   :numbered:
    :caption: UnrealROX Architecture
 
    _site/architecture/system

@@ -9,10 +9,7 @@ Hardware and Software prerequisites
 .. _Oculus SDK for Windows: https://developer.oculus.com/downloads/package/oculus-sdk-for-windows/
 .. _Vive Software: https://www.vive.com/us/setup/vive/
 
-First of all and before installation, you will need to statisfy some hardware and software prerequisites. 
-
-Hardware and software prerequisites
-###################################
+First of all and before installation, you will need to statisfy some hardware and software prerequisites:
 
 1. **Software**:
 
@@ -33,7 +30,7 @@ Hardware and software prerequisites
 
 	2.3 **VR headset**. Check if Oculus VR and/or HTC Vive PRO perform properly and if their installation and calibration was done correctly to achieve a good tracking.
 
-3. **You are ready for the next step!**
+3. **You are now ready to install UnrealROX, import your photorrealistic scene and create your own awesome dataset!**
 
 
-You are now ready to install UnrealROX, import your photorrealistic scene and create your own awesome dataset!
+

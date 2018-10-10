@@ -1,0 +1,38 @@
+UnrealROX
+├── docs
+│   ├── build
+│   ├── make.bat
+│   ├── Makefile
+│   └── source
+├── Config
+│   ├── DefaultEditor.ini
+│   ├── DefaultEngine.ini
+│   ├── DefaultGame.ini
+│   └── DefaultInput.ini
+├── Content
+│   ├── Common
+│   ├── Mannequin
+│   └── Maps
+├── Plugins
+│   └── AnimNode
+├── Source
+│   ├── robotrix
+│   ├── robotrixEditor.Target.cs
+│   └── robotrix.Target.cs
+├── RecordedSequences
+├── GeneratedSequences
+├── LICENSE
+└── robotrix.uproject
+
+
+
+
+
+
+
+
+
+
+
+
+
