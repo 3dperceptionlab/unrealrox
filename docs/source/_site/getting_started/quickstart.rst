@@ -13,7 +13,7 @@ Hardware and software prerequisites
 
 1. **Software**:
 
-	1.1 **Unreal Engine 4.18**. This tutorial was done with Unreal Engine 4.18. We cannot guarantee UnrealROX work properly with other UE versions.
+	1.1 **Unreal Engine 4.18**. This tutorial was done with Unreal Engine (UE) 4.18. We cannot guarantee UnrealROX work properly with other UE versions.
 
 	2.1 **Visual Studio**. In order to compile UnrealROX you will need Visual Studio. We recommend to launch Unreal Engine from Visual Studio selecting *robotrix* as starting point (important to avoid compiling the entire engine) and compiling the project in *Development editor* mode for a better performance.  
 
@@ -39,9 +39,9 @@ The straightforward way to use UnrealROX is importing your own scene to the proj
 
 1. **Get UnrealROX**. Clone or download `UnrealROX github`_.
 
-2. **Migrate your scene**. Localize *.umap* file of your scene in the Content Browser, *right-click* and go to *Asset Actions->Migrate*. Now you need to navigate to the *Content* folder of UnrealROX project and select it as target for migrating your scene. 
+2. **Migrate your scene**. On the one hand we have the UnrealROX project to which we want to import the scene from other UE4 project. In the Unreal Engine editor of the scene project, go to the Content Browser and localize *.umap* file of your scene, *right-click* and go to *Asset Actions->Migrate*. Now you need to navigate to the *Content* folder of UnrealROX project and select it as target for migrating your scene. 
 
-3. **Put the robot in your scene**. The last step is to put the robot in your scene. In the Content Browser navigate to *Mannequin->Meshes* and select your pawn (e.g. *ROXMannequinPawn*) and drag it to the scene. You can scale your robot to match with your scene scale.
+3. **Put the robot in your scene**. The last step is to put the robot in your scene. From this point we will only work on the UnrealROX project. In the UE4 editor go to the Content Browser and navigate to *Mannequin->Meshes* selecting your pawn (e.g. *ROXMannequinPawn*) and drag it to the scene. You can scale your robot to match it with your scene scale.
 
 4. **You are ready for the next step!**
 
@@ -121,7 +121,7 @@ TODO: HTC Vive PRO controllers
 Record your own dataset
 #######################
 
-Acomplishing with above instructions you will be able now to record your own dataset. Scene information (e.g. camera and objects pose and orientation) is dumped using .txt format and stored by default on the **FILL** folder. When you are recording, a red message will appear on the screen. You can begin and stop recording in each moment. When you restart the level, recording process automatically stops. For more information go to *UnrealROX Plugin->Recording* section.
+Acomplishing with above instructions you will be able now to record your own dataset. Scene information (e.g. camera and objects pose and orientation) is dumped using .txt format and stored by default on the RecordedSequences folder located in the root of the UnrealROX project. When you are recording, a red message will appear on the screen. You can begin and stop recording in each moment. When you restart the level, recording process automatically stops. For more information go to *UnrealROX Plugin->Recording* section.
 
 
 Generate ground truth for your record
@@ -129,9 +129,9 @@ Generate ground truth for your record
 
 This is the final step of this tutorial. Here you will generate the ground truth (e.g. semantic segmentation and depths maps, normal maps, stereo pairs, and also instance segmentation, etc.) for your recorded sequence. First of all, you need to convert the .txt file which is the output of recording module to JSON format which is the input to playback module. For this purpose, you can use the script *scenetojson.py* which will perfectly do this step for you. You also will get information such as, sequence length in seconds, fps, and total frames. 
 
-In order to proceed with the playback process, you will need to uncheck *Record mode*. You need to search ROXTracker in the *World Outlier* and locate "Recording configuration section". For a more detailed information, see *UnrealROX->Recording* section. After this brief configuration you can run the process in the *Selected Viewport* mode. All the data will be saved on **FILL** folder.
+In order to proceed with the playback process, you will need to uncheck *Record mode*. You need to search ROXTracker in the *World Outlier* and locate "Recording configuration section". For a more detailed information, see *UnrealROX->Recording* section. After this brief configuration you can run the process in the *Selected Viewport* mode. All the data will be saved by default on GeneratedSequences folder located in the root of UnrealROX project.
 
-Note: If your main purpose is to generate data and run the project in *VR Preview* mode, UnrealROX wouldn't work properly.
+Note: If your main purpose is to generate data and you run the project in *VR Preview* mode, UnrealROX wouldn't work properly.
 
 
 "That's all Folks!"
