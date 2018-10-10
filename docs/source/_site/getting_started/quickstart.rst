@@ -5,31 +5,9 @@ Quickstart
 .. _pivot tool: https://www.unrealengine.com/marketplace/pivot-tool
 .. _UnrealROX github: https://github.com/3dperceptionlab/unrealrox
 
-The main purpose of this tutorial is teaching you to successfully use UnrealROX in your scene.
-Note: this tutorial was done with Unreal Engine 4.18. We cannot guarantee UnrealROX work properly with other UE version.
+The main purpose of this tutorial is teaching you to successfully use UnrealROX in your scene [#f1]_.
 
-Hardware and software prerequisites
-###################################
-
-1. **Software**:
-
-	1.1 **Unreal Engine 4.18**. This tutorial was done with Unreal Engine (UE) 4.18. We cannot guarantee UnrealROX work properly with other UE versions.
-
-	2.1 **Visual Studio**. In order to compile UnrealROX you will need Visual Studio. We recommend to launch Unreal Engine from Visual Studio selecting *robotrix* as starting point (important to avoid compiling the entire engine) and compiling the project in *Development editor* mode for a better performance.  
-
-
-2. **Hardware**:
-
-	2.1. **GPU**. Make sure your GPU driver is well installed and updated. You need a good GPU to run smoothly a photorealistic scene alongside UnrealROX system.
-
-	2.2 **Overall hardware requirements**. For a smooth experience in photorealistic virtual environments rendered by Unreal Engine we recommend a good performance hardware configuration. 
-
-	2.3 **VR headset**. Check if Oculus VR and/or HTC Vive PRO perform properly and if their installation and calibration was done correctly to achieve a good tracking.
-
-3. **You are ready for the next step!**
-
-
-After checking prerequisites section and in order to get started with UnrealROX you need to perform the following steps:
+First of all, please check and satisfy all the :ref:`requirements`. Now in order to get started with UnrealROX you need to perform the following steps:
 
 
 How to import your scene to UnrealROX
@@ -135,3 +113,8 @@ Note: If your main purpose is to generate data and you run the project in *VR Pr
 
 
 "That's all Folks!"
+
+
+.. rubric: Footnotes
+
+.. [#f1] this tutorial was done with Unreal Engine 4.18. We cannot guarantee UnrealROX work properly with other UE version.

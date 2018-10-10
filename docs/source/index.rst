@@ -17,6 +17,7 @@ Welcome to UnrealROX's documentation!
     :maxdepth: 2
     :caption: UnrealROX Plugin
     
+    _site/plugin/requirements
     _site/plugin/installation
     _site/plugin/basicusage
     _site/plugin/recording
