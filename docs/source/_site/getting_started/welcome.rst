@@ -8,10 +8,14 @@ What is UnrealROX?
 UnrealROX is an extremely photorealistic virtual reality environment built over Unreal Engine 4 and designed for generating synthetic data for various robotic vision tasks. This virtual reality environment enables robotic vision researchers to generate realistic and visually plausible data with full ground truth for a wide variety of problems such as class and instance semantic segmentation, object detection, depth estimation, visual grasping, navigation, and more. 
 
 
+.. raw:: html
+
+	<iframe width="660" height="415" src="https://www.youtube.com/embed/CiRc5tCtCak?autoplay=1&cc_load_policy=1" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+
 Our motivation
 ==============
 
-State-of-the-art deep learning architectures need large amounts of accurately annotated data for achieving a good performance. The lack of large-scale datasets which provide accurate ground truth (e.g. semantic segmentation, depth and normal maps, etc.) is mainly because data annotation is tedious and time-consuming. Because of that, photorealistic virtual reality environments are becoming increasingly popular and widely used to generate huge amounts of data with an accurate ground truth.
+State-of-the-art deep learning architectures need large amounts of accurately annotated data for achieving a good performance. The lack of large-scale datasets which provide accurate ground truth (e.g. semantic segmentation, depth and normal maps, etc.) is mainly because data annotation task is tedious and time-consuming. Because of that, photorealistic virtual reality environments are becoming increasingly popular and widely used to generate huge amounts of data with an accurate ground truth.
 
 Taking advantage of this trend, we aim to provide a large-scale photorealistic dataset of indoor scenes where different robots can explore, manipulate, and interact with different objects. 
 
