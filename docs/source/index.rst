@@ -20,7 +20,8 @@ Welcome to UnrealROX's documentation!
     _site/project/general
     _site/project/requirements
     _site/project/installation
-    _site/project/basicusage
+    _site/project/sceneconfig
+    _site/project/controllers
     _site/project/recording
     _site/project/playback
 
