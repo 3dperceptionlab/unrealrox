@@ -1,10 +1,11 @@
+**************
 VR Controllers
-##############
+**************
 
 In this section we will describe the input map for both OculusVR and HTC Vive PRO controllers. 
 
 OculusVR
-========
+########
 
 In the following figure (Figure 2) we can see a representation of Oculus controllers with the functions assigned to each of the buttons. 
 
@@ -36,7 +37,7 @@ Using:
 
 
 HTC Vive PRO
-============
+############
 
 TODO: HTC Vive PRO controllers
 
