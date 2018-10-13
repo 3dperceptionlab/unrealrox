@@ -33,7 +33,7 @@ To import your scene to the UnrealROX project you need to:
 Do you need a robot for you scene?
 ##################################
 
-**TODO**: How can I import my own robot?
+1. **(Experimental) Import your own robot**. We are currently working on this feature (import a robot using its *URDF* robot model). In order to import your own robot you need the corresponding meshes, textures and skeleton. You also need to define constraints to control robot's movement and physics simulation. Then you need to configure the grasping system placing some *triggers* (e.g. *sphere triggers*) on robot's fingers/gripper and also code a new logic for the new hand or gripper.
 
 1. **Put the robot in your scene**. From this point we will only work on the UnrealROX project. In the UE4 editor go to the Content Browser and navigate to *Mannequin->Meshes* selecting your pawn (e.g. *ROXMannequinPawn*) and drag it to the scene. You can scale your robot to match with your scene scale.
 
