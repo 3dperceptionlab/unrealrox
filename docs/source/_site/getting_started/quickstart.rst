@@ -33,7 +33,7 @@ Once your scene is integrated with UnrealROX project, you need to do the followi
 
 2. **Check object pivots**. Run your scene and check that all object pivots are placed on the geometrical center of its meshes for configure X and Y axis (Note: Z axis should be 0 for a better interaction with some objects). This is important to track all the objects correctly during the recording and playback steps. However, this is a tedious task thus realistic scenes have lots of objects. Due to this, we use the plugin `pivot tool`_ which works like a charm (we don't include it in the project because of license conflicts).
 
-3. **Configure interactable objects**. Choose the object you want to interact with from the World Outlier (by default placed on the right side in the UE4 editor) and do the following:
+3. **Configure interactable objects**. Choose the object you want to interact with from the World Outliner (by default placed on the right side in the UE4 editor) and do the following:
 
 	3.1. **You need object to be movable**. Go to *Transform->Mobility* and set the object to *Movable*. Almost all the objects are static by default.
 
@@ -107,7 +107,7 @@ Generate ground truth for your record
 
 This is the final step of this tutorial. Here you will generate the ground truth (e.g. semantic segmentation and depths maps, normal maps, stereo pairs, and also instance segmentation, etc.) for your recorded sequence. First of all, you need to convert the .txt file which is the output of recording module to JSON format which is the input to playback module. For this purpose, you can use the script *scenetojson.py* which will perfectly do this step for you. You also will get information such as, sequence length in seconds, fps, and total frames. 
 
-In order to proceed with the playback process, you will need to uncheck *Record mode*. You need to search ROXTracker in the *World Outlier* and locate "Recording configuration section". For a more detailed information, see *UnrealROX->Recording* section. After this brief configuration you can run the process in the *Selected Viewport* mode. All the data will be saved by default on GeneratedSequences folder located in the root of UnrealROX project.
+In order to proceed with the playback process, you will need to uncheck *Record mode*. You need to search ROXTracker in the *World Outliner* and locate "Recording configuration section". For a more detailed information, see *UnrealROX->Recording* section. After this brief configuration you can run the process in the *Selected Viewport* mode. All the data will be saved by default on GeneratedSequences folder located in the root of UnrealROX project.
 
 Note: If your main purpose is to generate data and you run the project in *VR Preview* mode, UnrealROX wouldn't work properly.
 
