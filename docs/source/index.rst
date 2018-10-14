@@ -11,7 +11,7 @@ Welcome to UnrealROX's documentation!
    :caption: Getting Started
 
    _site/getting_started/welcome
-   _site/getting_started/quickstart
+   _site/getting_started/howtouse
 
 .. toctree::
     :maxdepth: 2
@@ -39,7 +39,6 @@ Welcome to UnrealROX's documentation!
 
 .. toctree::
 	:maxdepth: 2
-	:numbered:
 	:caption: Changelog
 
 	_site/changelog
