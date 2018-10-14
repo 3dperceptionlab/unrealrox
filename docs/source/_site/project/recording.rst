@@ -1,3 +1,5 @@
+.. _recording:
+
 *********
 Recording
 *********
@@ -14,7 +16,7 @@ To configure recording process you need to search for *ROXTracker* in the *World
 .. figure:: /_static/recording_0.png
     :scale: 100 %
     :align: center
-    :alt: Oculus controller representation with the correspondence between the robot actions and cotroller buttons.
+    :alt: General parameters for recording and playback steps.
     :figclass: align-center
 
     Figure 1. General parameters for recording and playback steps. Check *Record Mode* if you want to record your sequence.
@@ -24,7 +26,7 @@ The default path for the *Scene Save Directory* is the project's root directory.
 .. figure:: /_static/recording_1.png
     :scale: 100 %
     :align: center
-    :alt: Oculus controller representation with the correspondence between the robot actions and cotroller buttons.
+    :alt: Configurable parameters for recording process.
     :figclass: align-center
 
     Figure 2. Specific configurable parameters for recording process.
