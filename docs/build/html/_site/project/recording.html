@@ -1,0 +1,298 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Recording &mdash; UnrealROX 0.0.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Playback" href="playback.html" />
+    <link rel="prev" title="VR Controllers" href="controllers.html" /> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> UnrealROX
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started/welcome.html">Welcome</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started/howtouse.html">How to use UnrealROX</a></li>
+</ul>
+<p class="caption"><span class="caption-text">UnrealROX Project</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="general.html">Project structure</a></li>
+<li class="toctree-l1"><a class="reference internal" href="requirements.html">Hardware and Software prerequisites</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sceneconfig.html">Scene configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="controllers.html">VR Controllers</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Recording</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#general-configuration">General configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#configure-hmd-position">Configure HMD position</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#begin-stop-recording">Begin/Stop recording</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="playback.html">Playback</a></li>
+</ul>
+<p class="caption"><span class="caption-text">UnrealROX Architecture</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../architecture/system.html">UnrealROX architecture</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Troubleshooting</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../troubleshooting.html">Troubleshooting</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Changelog</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html">Changelog</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Contact</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../contact.html">Contact</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">UnrealROX</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+      <li>Recording</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../../_sources/_site/project/recording.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="recording">
+<span id="id1"></span><h1>Recording<a class="headerlink" href="#recording" title="Permalink to this headline">¶</a></h1>
+<p>During the recording process all scene information such as, camera location, its configuration and objects pose and orientation, among others, are dumped in a <em>.txt</em> file which is stored by default on the <em>RecordedSequences</em> folder located in the root of the UnrealROX project. Recording process is the same regardless of used VR hardware. VR controllers have their own input map, so there are different instructions for each of the used hardware.</p>
+<div class="section" id="general-configuration">
+<h2>General configuration<a class="headerlink" href="#general-configuration" title="Permalink to this headline">¶</a></h2>
+<p>To configure recording process you need to search for <em>ROXTracker</em> in the <em>World Outliner</em> panel from UE4 editor. <em>ROXTracker</em> contains general, recording and playback configuration options. <em>Figure 1 and 2</em> represent general and specific recording parameters.</p>
+<div class="align-center figure" id="id3">
+<a class="reference internal image-reference" href="../../_images/recording_0.png"><img alt="General parameters for recording and playback steps." src="../../_images/recording_0.png" style="width: 715.0px; height: 99.0px;" /></a>
+<p class="caption"><span class="caption-text">Figure 1. General parameters for recording and playback steps. Check <em>Record Mode</em> if you want to record your sequence.</span></p>
+</div>
+<p>The default path for the <em>Scene Save Directory</em> is the project&#8217;s root directory. <em>Scene Folder</em> indicates the folder where recorded sequences are stored. You can freely change these parameters.</p>
+<div class="align-center figure" id="id4">
+<a class="reference internal image-reference" href="../../_images/recording_1.png"><img alt="Configurable parameters for recording process." src="../../_images/recording_1.png" style="width: 571.0px; height: 218.0px;" /></a>
+<p class="caption"><span class="caption-text">Figure 2. Specific configurable parameters for recording process.</span></p>
+</div>
+<p>Before start recording you should configure the following parameters:</p>
+<ul class="simple">
+<li><strong>Record mode</strong>: you should check this option if you want to record your own sequences (<em>see Figure 1</em>).</li>
+<li><strong>Select scene cameras</strong>: you should select scene cameras which you want to capture data. Go to <em>Recording-&gt;Camera Actors</em> and add the cameras you want to use during recording (<em>see Figure 2</em>).</li>
+<li><strong>Scene file name prefix</strong>: you can also configure the prefix filename for the <em>.txt</em> files with the recorded sequences. Default: scene.</li>
+</ul>
+</div>
+<div class="section" id="configure-hmd-position">
+<h2>Configure HMD position<a class="headerlink" href="#configure-hmd-position" title="Permalink to this headline">¶</a></h2>
+<p>Before recording you need to check for the <strong>HMD position</strong>. You need to check if your HMD and its attached camera are in the correct position. This is variable according to user&#8217;s height, so, you need to manually configure your main camera position (the main camera is what you see on your Oculus headset). For the configuration <a class="footnote-reference" href="#f1" id="id2">[1]</a>:</p>
+<blockquote>
+<div><ul class="simple">
+<li><strong>with OculusVR</strong>: you need to press <em>left joystick</em> to enable HMD position changes. You are now able to change camera position along Z axis using right joystick and also camera translation on X and Y axes with the <em>left joystick</em>. A good tip for adjusting camera position is checking if shoulders position is corresponding with user&#8217;s real shoulder position. User&#8217;s should also be able to see its chest by looking down.</li>
+<li><strong>with HTC Vive PRO</strong>: TODO</li>
+</ul>
+</div></blockquote>
+</div>
+<div class="section" id="begin-stop-recording">
+<h2>Begin/Stop recording<a class="headerlink" href="#begin-stop-recording" title="Permalink to this headline">¶</a></h2>
+<p>To begin/stop recording, user need to:</p>
+<ul class="simple">
+<li><strong>with OculusVR</strong>: press <em>A button</em> from the right controller. Press again to stop recording.</li>
+<li><strong>with HTC Vive PRO</strong>: TODO</li>
+</ul>
+<p>A red collored message will appear both on the screen and HMD when recording a sequence. Once recording process is stopped, a <em>scene.txt</em> file will be created with all scene information.</p>
+<p>With the above instructions you will be able to record your own dataset!</p>
+<table class="docutils footnote" frame="void" id="f1" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id2">[1]</a></td><td>Once HMD position is configured, restarting the scene using VR controllers wouldn&#8217;t change this configuration.</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="playback.html" class="btn btn-neutral float-right" title="Playback" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="controllers.html" class="btn btn-neutral" title="VR Controllers" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Pablo Martinez-Gonzalez, Sergiu Oprea, Alberto Garcia-Garcia, Sergio Orts-Escolano and Jose Garcia-Rodriguez
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    
+    
+      <script type="text/javascript">
+          var DOCUMENTATION_OPTIONS = {
+              URL_ROOT:'../../',
+              VERSION:'0.0.1',
+              LANGUAGE:'None',
+              COLLAPSE_INDEX:false,
+              FILE_SUFFIX:'.html',
+              HAS_SOURCE:  true,
+              SOURCELINK_SUFFIX: '.txt'
+          };
+      </script>
+        <script type="text/javascript" src="../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../_static/doctools.js"></script>
+    
+
+  
+
+  <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

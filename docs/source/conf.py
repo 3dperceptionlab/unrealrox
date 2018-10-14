@@ -21,7 +21,7 @@
 
 project = 'UnrealROX'
 copyright = '2018, Pablo Martinez-Gonzalez, Sergiu Oprea, Alberto Garcia-Garcia, Sergio Orts-Escolano and Jose Garcia-Rodriguez'
-author = 'Pablo Martinez-Gonzalez, Sergiu Oprea, Alberto Garcia-Garcia, Sergio Orts-Escolano and Jose Garcia-Rodriguez'
+author = 'Pablo Martinez-Gonzalez, Sergiu Oprea, Alberto Garcia-Garcia, \n Sergio Orts-Escolano and Jose Garcia-Rodriguez'
 
 # The short X.Y version
 version = ''
