@@ -33,14 +33,15 @@ In the following figure we can see the directory structure of UnrealROX:
 
 	- **TODO**
 
-- **RecordedSequences** folder contains the sequences you have recorded which are stored in *.txt* files.
+- **RecordedSequences** folder which contain the sequences you have recorded which are stored in *.txt* files.
 
-- **GeneratedSequences** folder contains the ground truth generated for the recorded sequences. For each sequence to be generated the following directory tree is created:
-	
-	- **TODO: Maybe include a figure of the directory structure**
-
-	- **Folder with sequence name**:
-
-		- **Folder for each camera** which contains the desired GT organized in different directories.
+- **GeneratedSequences** folder which contain the ground truth generated for the recorded sequences. In Figure 2 we can see the directory structure of the generated data. At the root (*vienese_001*) we have the sequence name which is composed by the *scene name* (e.g. vienese) and the number of sequence (e.g. 001 because it is the first sequence). Then we create a folder for each data modality, in which we store the frames organized in directories for each one of the cameras.
 
 
+.. figure:: /_static/gt_tree.png
+    :scale: 100 %
+    :align: center
+    :alt: UnrealROX directory tree for generated data.
+    :figclass: align-center
+
+    Figure 2. Ground truth directory tree.
