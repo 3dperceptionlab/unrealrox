@@ -20,6 +20,8 @@ Now you have the UnrealROX project you will learn how to use it properly. First 
 
 - `Hamburg House`_
 
+- `Studio Apartment`_
+
 - etc.
 
 
