@@ -9,6 +9,7 @@ Scene configuration
 .. _Viennese Apartment: https://ue4arch.com/projects/viennese-apartment/
 .. _Xoio Berlin Flat: https://www.unrealengine.com/marketplace/xoio-berlin-flat
 .. _Hamburg House: https://ue4arch.com/projects/hamburg/
+.. _Studio Apartment: https://www.unrealengine.com/marketplace/studio-apartment
 
 Now you have the UnrealROX project you will learn how to use it properly. First of all you need to get a photorrealistic scene or create your own. The scenes we used are the following:
 

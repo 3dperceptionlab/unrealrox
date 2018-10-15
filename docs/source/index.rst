@@ -26,12 +26,6 @@ Welcome to UnrealROX's documentation!
     _site/project/playback
 
 .. toctree::
-   :maxdepth: 2
-   :caption: UnrealROX Architecture
-
-   _site/architecture/system
-
-.. toctree::
 	:maxdepth: 2
 	:caption: Troubleshooting
 
