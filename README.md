@@ -4,12 +4,12 @@ Data-driven algorithms have surpassed traditional techniques in almost every asp
 
 ## Documentation
 
-Visit the (ReadTheDocs)[https://unrealrox.readthedocs.io/en/latest/] website for instructions on how to setup the environment and detailed usage tutorials.
+Visit the [ReadTheDocs](https://unrealrox.readthedocs.io/en/latest/) website for instructions on how to setup the environment and detailed usage tutorials.
 
 ## Paper
 
 Pablo Martinez-Gonzalez, Sergiu Oprea, Alberto Garcia-Garcia, Alvaro Jover-Alvarez, Sergio Orts-Escolano, Jose Garcia-Rodriguez
-(UnrealROX: An eXtremely Photorealistic Virtual Reality Environment for Robotics Simulations and Synthetic Data Generation)[https://arxiv.org/abs/1810.06936]
+[UnrealROX: An eXtremely Photorealistic Virtual Reality Environment for Robotics Simulations and Synthetic Data Generation](https://arxiv.org/abs/1810.06936)
 Submitted to Virtual Reality journal.
 
 
@@ -20,7 +20,7 @@ If you use UnrealROX, please cite:
   title={{UnrealROX}: An eXtremely Photorealistic Virtual Reality Environment for Robotics Simulations and Synthetic Data Generation},
   author={Martinez-Gonzalez, Pablo and Oprea, Sergiu and Garcia-Garcia, Alberto and Jover-Alvarez, Alvaro and Orts-Escolano, Sergio and Garcia-Rodriguez, Jose},
   journal={ArXiv e-prints},
-	eprint = {1810.06936},
+  eprint = {1810.06936},
   year={2018}
 }
 ```
