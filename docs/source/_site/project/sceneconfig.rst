@@ -4,7 +4,7 @@
 Scene configuration
 *******************
 
-.. _pivot tool: https://www.unrealengine.com/marketplace/pivot-tool
+.. _Pivot Tool: https://www.unrealengine.com/marketplace/pivot-tool
 .. _Interactive House: https://ue4arch.com/projects/interactive-house/
 .. _Viennese Apartment: https://ue4arch.com/projects/viennese-apartment/
 .. _Xoio Berlin Flat: https://www.unrealengine.com/marketplace/xoio-berlin-flat
@@ -48,7 +48,7 @@ Check and configure scene objects!
 
 You need to check object pivots are placed correctly in order to properly simulate physics during interaction. You also need to configure the objects you will interact with. To do this, following the next steps:
 
-1. **Check object pivots**. Run your scene and check that all object pivots are placed on the geometrical center of its meshes for configure X and Y axis (Note: Z axis should be 0 for a better interaction with some objects). This is important to track all the objects correctly during the recording and playback steps. However, this is a tedious task thus realistic scenes have lots of objects. Due to this, we use the plugin `pivot tool`_ which works like a charm (we don't include it in the project because of license conflicts).
+1. **Check object pivots**. Run your scene and check that all object pivots are placed at the lowest geometric center of the mesh. The mesh center is determined by the X and Y axes values, meanwhile the Z axis value should be the lowest of the mesh. This is important to track all the objects correctly during the recording and playback steps and also for the physics simulation during interaction. However, this is a tedious task thus realistic scenes have lots of objects. Due to this, we use the plugin `Pivot Tool`_ which works like a charm (we don't include it in the project because of license conflicts). We highly recommend to use Pivot Tool, thus you can configure all the objects in seconds.
 
 2. **Configure interactable objects**. Choose the object you want to interact with from the World Outlier (by default placed on the right side in the UE4 editor) and do the following:
 
