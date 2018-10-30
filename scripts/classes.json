@@ -1,0 +1,470 @@
+{
+    "none":
+    {
+        "name": "none",
+        "semantic_class": "none",
+        "color":
+        {
+            "r": 0,
+            "g": 0,
+            "b": 0
+        },
+        "detection_class": "none"
+    },
+    "wall":
+    {
+        "name": "wall",
+        "semantic_class": "wall",
+        "color":
+        {
+          "r": 0,
+          "g": 0,
+          "b": 255
+        },
+        "detection_class": "none"
+    },
+    "floor":
+    {
+        "name": "floor",
+        "semantic_class": "floor",
+        "color":
+        {
+          "r": 0,
+          "g": 255,
+          "b": 0
+        },
+        "detection_class": "none"
+    },
+    "ceiling":
+    {
+        "name": "ceiling",
+        "semantic_class": "ceiling",
+        "color":
+        {
+          "r": 0,
+          "g": 255,
+          "b": 255
+        },
+        "detection_class": "none"
+    },
+    "window":
+    {
+        "name": "window",
+        "semantic_class": "window",
+        "color":
+        {
+          "r": 255,
+          "g": 0,
+          "b": 0
+        },
+        "detection_class": "none"
+    },
+    "door":
+    {
+        "name": "door",
+        "semantic_class": "door",
+        "color":
+        {
+          "r": 255,
+          "g": 0,
+          "b": 255
+        },
+        "detection_class": "none"
+    },
+    "table":
+    {
+        "name": "table",
+        "semantic_class": "table",
+        "color":
+        {
+            "r": 255,
+            "g": 255,
+            "b": 0
+        },
+        "detection_class": "table"
+    },
+    "chair":
+    {
+        "name": "chair",
+        "semantic_class": "chair",
+        "color":
+        {
+            "r": 255,
+            "g": 255,
+            "b": 255
+        },
+        "detection_class": "chair"
+    },
+    "lamp":
+    {
+        "name": "lamp",
+        "semantic_class": "lamp",
+        "color":
+        {
+            "r": 0,
+            "g": 0,
+            "b": 128
+        },
+        "detection_class": "lamp"
+    },
+    "sofa":
+    {
+        "name": "sofa",
+        "semantic_class": "sofa",
+        "color":
+        {
+            "r": 0,
+            "g": 128,
+            "b": 0
+        },
+        "detection_class": "sofa"
+    },
+    "cupboard":
+    {
+        "name": "cupboard",
+        "semantic_class": "cupboard",
+        "color":
+        {
+            "r": 0,
+            "g": 128,
+            "b": 128
+        },
+        "detection_class": "lamp"
+    },
+    "screen":
+    {
+        "name": "screen",
+        "semantic_class": "screen",
+        "color":
+        {
+            "r": 128,
+            "g": 0,
+            "b": 0
+        },
+        "detection_class": "screen"
+    },
+    "robot":
+    {
+        "name": "robot",
+        "semantic_class": "robot",
+        "color":
+        {
+            "r": 128,
+            "g": 0,
+            "b": 128
+        },
+        "detection_class": "robot"
+    },
+    "frame":
+    {
+        "name": "frame",
+        "semantic_class": "frame",
+        "color":
+        {
+            "r": 128,
+            "g": 128,
+            "b": 0
+        },
+        "detection_class": "frame"
+    },
+    "bed":
+    {
+        "name": "bed",
+        "semantic_class": "bed",
+        "color":
+        {
+            "r": 128,
+            "g": 128,
+            "b": 128
+        },
+        "detection_class": "bed"
+    },
+    "fridge":
+    {
+        "name": "fridge",
+        "semantic_class": "fridge",
+        "color":
+        {
+            "r": 255,
+            "g": 96,
+            "b": 0
+        },
+        "detection_class": "lamp"
+    },
+    "whiteboard":
+    {
+        "name": "whiteboard",
+        "semantic_class": "whiteboard",
+        "color":
+        {
+            "r": 255,
+            "g": 215,
+            "b": 180
+        },
+        "detection_class": "whiteboard"
+    },
+    "book":
+    {
+        "name": "book",
+        "semantic_class": "book",
+        "color":
+        {
+            "r": 170,
+            "g": 110,
+            "b": 40
+        },
+        "detection_class": "book"
+    },
+    "bottle":
+    {
+        "name": "bottle",
+        "semantic_class": "bottle",
+        "color":
+        {
+            "r": 230,
+            "g": 190,
+            "b": 255
+        },
+        "detection_class": "bottle"
+    },
+    "plant":
+    {
+        "name": "plant",
+        "semantic_class": "plant",
+        "color":
+        {
+            "r": 210,
+            "g": 245,
+            "b": 60
+        },
+        "detection_class": "plant"
+    },
+    "furniture":
+    {
+        "name": "furniture",
+        "semantic_class": "furniture",
+        "color":
+        {
+            "r": 170,
+            "g": 255,
+            "b": 195
+        },
+        "detection_class": "none"
+    },
+    "toilet":
+    {
+        "name": "toilet",
+        "semantic_class": "toilet",
+        "color":
+        {
+            "r": 230,
+            "g": 25,
+            "b": 75
+        },
+        "detection_class": "toilet"
+    },
+    "phone":
+    {
+        "name": "phone",
+        "semantic_class": "phone",
+        "color":
+        {
+            "r": 255,
+            "g": 250,
+            "b": 200
+        },
+        "detection_class": "phone"
+    },
+    "bathtub":
+    {
+        "name": "bathtub",
+        "semantic_class": "bathtub",
+        "color":
+        {
+            "r": 0,
+            "g": 130,
+            "b": 20
+        },
+        "detection_class": "bathtub"
+    },
+    "cup":
+    {
+        "name": "cup",
+        "semantic_class": "cup",
+        "color":
+        {
+            "r": 60,
+            "g": 180,
+            "b": 75
+        },
+        "detection_class": "cup"
+    },
+    "mat":
+    {
+        "name": "mat",
+        "semantic_class": "mat",
+        "color":
+        {
+            "r": 245,
+            "g": 130,
+            "b": 48
+        },
+        "detection_class": "mat"
+    },
+    "mirror":
+    {
+        "name": "mirror",
+        "semantic_class": "mirror",
+        "color":
+        {
+            "r": 205,
+            "g": 205,
+            "b": 0
+        },
+        "detection_class": "mirror"
+    },
+    "sink":
+    {
+        "name": "sink",
+        "semantic_class": "sink",
+        "color":
+        {
+            "r": 255,
+            "g": 193,
+            "b": 37
+        },
+        "detection_class": "sink"
+    },
+    "box":
+    {
+        "name": "box",
+        "semantic_class": "box",
+        "color":
+        {
+            "r": 255,
+            "g": 96,
+            "b": 0
+        },
+        "detection_class": "box"
+    },
+    "mouse":
+    {
+        "name": "mouse",
+        "semantic_class": "mouse",
+        "color":
+        {
+            "r": 113,
+            "g": 113,
+            "b": 198
+        },
+        "detection_class": "mouse"
+    },
+    "keyboard":
+    {
+        "name": "keyboard",
+        "semantic_class": "keyboard",
+        "color":
+        {
+            "r": 202,
+            "g": 225,
+            "b": 255
+        },
+        "detection_class": "keyboard"
+    },
+    "bin":
+    {
+        "name": "bin",
+        "semantic_class": "bin",
+        "color":
+        {
+            "r": 95,
+            "g": 158,
+            "b": 160
+        },
+        "detection_class": "bin"
+    },
+    "cushion":
+    {
+        "name": "cushion",
+        "semantic_class": "cushion",
+        "color":
+        {
+            "r": 0,
+            "g": 250,
+            "b": 154
+        },
+        "detection_class": "cushion"
+    },
+    "shelf":
+    {
+        "name": "shelf",
+        "semantic_class": "shelf",
+        "color":
+        {
+            "r": 205,
+            "g": 186,
+            "b": 150
+        },
+        "detection_class": "shelf"
+    },
+    "bag":
+    {
+        "name": "bag",
+        "semantic_class": "bag",
+        "color":
+        {
+            "r": 139,
+            "g": 69,
+            "b": 0
+        },
+        "detection_class": "bag"
+    },
+    "curtain":
+    {
+        "name": "curtain",
+        "semantic_class": "curtain",
+        "color":
+        {
+            "r": 255,
+            "g": 69,
+            "b": 0
+        },
+        "detection_class": "none"
+    },
+    "kitchen_stuff":
+    {
+        "name": "kitchen_stuff",
+        "semantic_class": "kitchen_stuff",
+        "color":
+        {
+            "r": 142,
+            "g": 56,
+            "b": 142
+        },
+        "detection_class": "kitchen_stuff"
+    },
+    "bath_stuff":
+    {
+        "name": "bath_stuff",
+        "semantic_class": "bath_stuff",
+        "color":
+        {
+            "r": 198,
+            "g": 113,
+            "b": 133
+        },
+        "detection_class": "kitchen_stuff"
+    },
+    "prop":
+    {
+        "name": "prop",
+        "semantic_class": "prop",
+        "color":
+        {
+            "r": 197,
+            "g": 193,
+            "b": 170
+        },
+        "detection_class": "prop"
+    }
+}
