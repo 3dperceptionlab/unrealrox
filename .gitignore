@@ -47,3 +47,13 @@ Lib/SteamScripts/*
 
 !*.keep
 !Plugins/Runtime/Substance/Libs/**/*
+
+#Content
+Content/Mannequin/Animations/ProAnimSet/*
+!Content/Mannequin/Animations/ProAnimSet/InPlace
+Content/Mannequin/Animations/ProAnimSet/InPlace/*
+!Content/Mannequin/Animations/ProAnimSet/InPlace/Idle.uasset
+!Content/Mannequin/Animations/ProAnimSet/InPlace/WalkBwdLoop.uasset
+!Content/Mannequin/Animations/ProAnimSet/InPlace/WalkFwdLoop.uasset
+!Content/Mannequin/Animations/ProAnimSet/InPlace/WalkFwdStart.uasset
+!Content/Mannequin/Animations/ProAnimSet/InPlace/WalkFwdStop_LU.uasset

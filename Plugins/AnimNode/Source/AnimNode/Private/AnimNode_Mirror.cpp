@@ -128,6 +128,7 @@ void FAnimNode_Mirror::InitializeBoneReferences(const FBoneContainer& RequiredBo
 	for (auto It = BonesTransfroms.Map_IdxTransform.CreateConstIterator(); It; ++It) {
 		FBoneReference br(It.Key());
 		br.Initialize(RequiredBones);
-		SetOfBonesToModify.AddUnique(br);
+		if (br.BoneIndex != INDEX_NONE)
+			SetOfBonesToModify.AddUnique(br);
 	}
 }
