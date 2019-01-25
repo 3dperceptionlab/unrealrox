@@ -13,6 +13,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Pawn.h"
 #include "MotionControllerComponent.h"
+#include "Haptics/HapticFeedbackEffect_Base.h"
 #include "ROXBasePawn.generated.h"
 
 USTRUCT()
@@ -56,6 +57,8 @@ private:
 	/** The main skeletal mesh associated with this Character (optional sub-object). */
 	UPROPERTY(Category = Pawn, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	USkeletalMeshComponent* MeshComponent;
+
+	UHapticFeedbackEffect_Base* GraspHapticFeedback;
 
 protected:
 
@@ -227,7 +230,7 @@ public:
 
 	protected:
 		/** Main grasping flow **/
-		void Grasp(float InValue, TMap<EHandFinger, float> &FingerGrips, TMap<EHandFinger, bool> &FingerOverlapping, TMap<EHandFinger, bool> &FingerBlocked, FName BoneName, AActor* &AttachedActor, bool &isActorAttached, bool &DisableGrab, AActor* &OverlappedActor, bool &isActorAttachedOtherHand, bool &DisableGrabOtherHand, AActor* &AttachedActorOtherHand);
+		bool Grasp(float InValue, TMap<EHandFinger, float> &FingerGrips, TMap<EHandFinger, bool> &FingerOverlapping, TMap<EHandFinger, bool> &FingerBlocked, FName BoneName, AActor* &AttachedActor, bool &isActorAttached, bool &DisableGrab, AActor* &OverlappedActor, bool &isActorAttachedOtherHand, bool &DisableGrabOtherHand, AActor* &AttachedActorOtherHand);
 
 		void SmoothGrasp(TMap<EHandFinger, float> &FingerGrips, EHandFinger Finger, float InputGrip, float MaxStepPerSecond);
 

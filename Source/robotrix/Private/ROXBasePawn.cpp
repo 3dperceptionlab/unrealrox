@@ -19,6 +19,14 @@ AROXBasePawn::AROXBasePawn()
  	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
+	// Haptic Feedback Asset for grasping
+	GraspHapticFeedback = nullptr;
+	static ConstructorHelpers::FObjectFinder<UHapticFeedbackEffect_Base> GraspHapticFeedbackFinder(TEXT("/Game/Common/GraspHapticFeedback.GraspHapticFeedback"));
+	if (GraspHapticFeedbackFinder.Succeeded())
+	{
+		GraspHapticFeedback = (UHapticFeedbackEffect_Base*)GraspHapticFeedbackFinder.Object;
+	}
+
 	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RootComponent"));
 
 	MeshComponent = CreateOptionalDefaultSubobject<USkeletalMeshComponent>(TEXT("Mesh"));
@@ -242,19 +250,32 @@ bool AROXBasePawn::CheckFirstPersonCamera(ACameraActor* inputCam)
 
 void AROXBasePawn::GraspRightHand(float Value)
 {
-	Grasp(Value, R_FingerGrips, R_FingerOverlapping, R_FingerBlocked, FName("hand_r"), R_OverlappedActor, R_isActorAttached, R_DisableGrab, R_AttachedActor, L_isActorAttached, L_DisableGrab, L_AttachedActor);
+	bool isObjectAttached = Grasp(Value, R_FingerGrips, R_FingerOverlapping, R_FingerBlocked, FName("hand_r"), R_OverlappedActor, R_isActorAttached, R_DisableGrab, R_AttachedActor, L_isActorAttached, L_DisableGrab, L_AttachedActor);
 	R_CurrentGrip = Value;
+
+	// Play haptic effect
+	if (isObjectAttached)
+	{
+		CachedPC->PlayHapticEffect(GraspHapticFeedback, EControllerHand::Right);
+	}
 }
 
 void AROXBasePawn::GraspLeftHand(float Value)
 {
-	Grasp(Value, L_FingerGrips, L_FingerOverlapping, L_FingerBlocked, FName("hand_l"), L_OverlappedActor, L_isActorAttached, L_DisableGrab, L_AttachedActor, R_isActorAttached, R_DisableGrab, R_AttachedActor);
+	bool isObjectAttached = Grasp(Value, L_FingerGrips, L_FingerOverlapping, L_FingerBlocked, FName("hand_l"), L_OverlappedActor, L_isActorAttached, L_DisableGrab, L_AttachedActor, R_isActorAttached, R_DisableGrab, R_AttachedActor);
 	L_CurrentGrip = Value;
+
+	// Play haptic effect
+	if (isObjectAttached)
+	{
+		CachedPC->PlayHapticEffect(GraspHapticFeedback, EControllerHand::Left);
+	}
 }
 
-void AROXBasePawn::Grasp(float CurrentGrip, TMap<EHandFinger, float> &FingerGrips, TMap<EHandFinger, bool> &FingerOverlapping, TMap<EHandFinger, bool> &FingerBlocked, FName BoneName, AActor* &OverlappedActor, bool &isActorAttached, bool &DisableGrab, AActor* &AttachedActor, bool &isActorAttachedOtherHand, bool &DisableGrabOtherHand, AActor* &AttachedActorOtherHand)
+bool AROXBasePawn::Grasp(float CurrentGrip, TMap<EHandFinger, float> &FingerGrips, TMap<EHandFinger, bool> &FingerOverlapping, TMap<EHandFinger, bool> &FingerBlocked, FName BoneName, AActor* &OverlappedActor, bool &isActorAttached, bool &DisableGrab, AActor* &AttachedActor, bool &isActorAttachedOtherHand, bool &DisableGrabOtherHand, AActor* &AttachedActorOtherHand)
 {
 	// Update finger positions
+	bool objectAttached = false;
 	for (auto Entry = FingerBlocked.CreateIterator(); Entry; ++Entry)
 	{
 		const EHandFinger& Finger = Entry.Key();
@@ -303,6 +324,7 @@ void AROXBasePawn::Grasp(float CurrentGrip, TMap<EHandFinger, float> &FingerGrip
 			}
 
 			AttachObject(OverlappedActor, BoneName);
+			objectAttached = true;
 		}
 	}
 	else
@@ -314,6 +336,8 @@ void AROXBasePawn::Grasp(float CurrentGrip, TMap<EHandFinger, float> &FingerGrip
 		}
 		DisableGrab = false;
 	}
+
+	return objectAttached;
 }
 
 void AROXBasePawn::SmoothGrasp(TMap<EHandFinger, float> &FingerGrips, EHandFinger Finger, float InputGrip, float MaxStepPerSecond)
