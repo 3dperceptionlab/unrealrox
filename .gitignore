@@ -1,7 +1,11 @@
 Intermediate
 Binaries
 DerivedDataCache
-Saved
+Saved/*
+Saved/*/
+!Saved/logs/
+Saved/logs/*
+Saved/logs/*/
 Screenshots
 GeneratedSequences
 
