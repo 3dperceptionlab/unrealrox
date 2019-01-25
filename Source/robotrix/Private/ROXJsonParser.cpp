@@ -43,6 +43,12 @@ bool ROXJsonParser::LoadFile(FString JsonFilePath)
 			{
 				CurrentCameraObject = CamerasJsonArray[i]->AsObject();
 				CameraNames.Add(CurrentCameraObject->GetStringField("name"));
+
+				FROXCameraConfig camConf;
+				camConf.CameraName = CurrentCameraObject->GetStringField("name");
+				camConf.StereoFocalDistance = CurrentCameraObject->GetNumberField("stereo");
+				camConf.FieldOfView = CurrentCameraObject->GetNumberField("fov");
+				CameraConfigs.Add(camConf);
 			}
 
 			TSharedPtr<FJsonObject> CurrentPawnObject;
@@ -50,6 +56,11 @@ bool ROXJsonParser::LoadFile(FString JsonFilePath)
 			{
 				CurrentPawnObject = PawnsJsonArray[i]->AsObject();
 				PawnNames.Add(CurrentPawnObject->GetStringField("name"));
+
+				FROXPawnInfo pawnInfo;
+				pawnInfo.PawnName = CurrentPawnObject->GetStringField("name");
+				pawnInfo.NumBones = CurrentPawnObject->GetIntegerField("num_bones");
+				PawnsInfo.Add(pawnInfo);
 			}
 		}
 		else
@@ -292,6 +303,7 @@ void ROXJsonParser::SceneTxtToJson(FString path, FString txt_filename, FString j
 			numLinesPerFrame += (numBonesSkeletons[i]);
 		}
 		int nEstimatedFrames = (txt_file_lines.Num() - c_line) / numLinesPerFrame;
+		int frameId = 0;
 
 		while (c_line + numLinesPerFrame <= txt_file_lines.Num())
 		{
@@ -301,7 +313,8 @@ void ROXJsonParser::SceneTxtToJson(FString path, FString txt_filename, FString j
 			c_line++;
 			TArray<FString> line_id_frame;
 			txt_file_lines[c_line].ParseIntoArray(line_id_frame, TEXT(" "));
-			Json_Frames->SetStringField("id", IntToStringDigits(FCString::Atoi(*line_id_frame[0]), 6));
+			frameId = FCString::Atoi(*line_id_frame[0]);
+			Json_Frames->SetStringField("id", IntToStringDigits(frameId, 6));
 			float timestamp = FCString::Atof(*line_id_frame[1]);
 			Json_Frames->SetNumberField("timestamp", timestamp);
 
@@ -404,7 +417,10 @@ void ROXJsonParser::SceneTxtToJson(FString path, FString txt_filename, FString j
 		FString json_file_path = path + "/" + json_filename + ".json";
 		FFileHelper::SaveStringToFile(OutputString, *json_file_path, FFileHelper::EEncodingOptions::AutoDetect, &IFileManager::Get(), EFileWrite::FILEWRITE_None);
 
-		FString success_message("Scene JSON file named " + json_filename + ".json has been created successfully. Frames: " + FString::FromInt(numFrames) + ". Total time: " + FString::SanitizeFloat(totalTime) + ". Mean framerate: " + FString::SanitizeFloat(numFrames / totalTime));
+		FString success_message("Scene JSON file named " + json_filename + ".json has been created successfully.");
+		success_message += " Frames: " + FString::FromInt(numFrames) + ".";
+		success_message += " Total time: " + FString::SanitizeFloat(totalTime) + ". Mean framerate: " + FString::SanitizeFloat(numFrames / totalTime);
+		success_message += " Lost frames: " + FString::FromInt(frameId - numFrames) + " (" + FString::SanitizeFloat(FMath::RoundToInt((frameId - numFrames) * 1000.0f / numFrames) / 10.0f) + "%).";
 		UE_LOG(LogTemp, Warning, TEXT("%s"), *success_message);
 	}
 	else

@@ -55,6 +55,7 @@ public:
 	void ToggleMoveVRCamControllersModifier();
 	void GraspRightHand(float Value);
 	void GraspLeftHand(float Value);
+	float JoystickAxisTunning(float x);
 
 	void OnStartRecording();
 	void OnResetVR();
@@ -76,6 +77,6 @@ public:
 
 	// Screenshot
 	void TakeScreenshot();
-	void CaptureFrame();
 	void TakeDepthScreenshot();
+	void SetRecordSettings();
 };

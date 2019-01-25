@@ -45,9 +45,19 @@ public:
 		return CameraNames;
 	}
 
+	FORCEINLINE TArray<FROXCameraConfig> GetCameraConfigs() const
+	{
+		return CameraConfigs;
+	}
+
 	FORCEINLINE TArray<FString> GetPawnNames() const
 	{
 		return PawnNames;
+	}
+
+	FORCEINLINE TArray<FROXPawnInfo> GetPawnsInfo() const
+	{
+		return PawnsInfo;
 	}
 
 protected:
@@ -58,6 +68,8 @@ protected:
 
 	TArray<FString> PawnNames;
 	TArray<FString> CameraNames;
+	TArray<FROXCameraConfig> CameraConfigs;
+	TArray<FROXPawnInfo> PawnsInfo;
 	TArray<TSharedPtr<FJsonValue>> CamerasJsonArray;
 	TArray<TSharedPtr<FJsonValue>> FramesJsonArray;
 	TArray<TSharedPtr<FJsonValue>> PawnsJsonArray;

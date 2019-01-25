@@ -3,12 +3,17 @@ Binaries
 DerivedDataCache
 Saved
 Screenshots
+GeneratedSequences
 
 data
 SceneText/*.txt
 SceneText/*.json
 SceneText/**/*.txt
 SceneText/**/*.json
+RecordedSequences/*.txt
+RecordedSequences/*.json
+RecordedSequences/**/*.txt
+RecordedSequences/**/*.json
 *.VC.db
 *.opensdf
 *.opendb

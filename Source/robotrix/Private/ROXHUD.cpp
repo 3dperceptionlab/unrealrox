@@ -10,7 +10,7 @@ AROXHUD::AROXHUD() :
 	showCamInHUD(false),
 	isRecording(false),
 	isProfiling(false),
-	isDebugging(false),
+	isDebugging(true),
 	stateString(""),
 	stateStringRemainingTime(0.0f),
 	errorString(""),

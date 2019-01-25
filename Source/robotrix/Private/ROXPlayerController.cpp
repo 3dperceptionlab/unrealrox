@@ -66,11 +66,14 @@ void AROXPlayerController::SetupInputComponent()
 	InputComponent->BindAction("CameraPrev", IE_Pressed, this, &AROXPlayerController::CameraPrev);
 	InputComponent->BindAction("TakeScreenshot", IE_Pressed, this, &AROXPlayerController::TakeScreenshot);
 	InputComponent->BindAction("TakeDepthScreenshot", IE_Pressed, this, &AROXPlayerController::TakeDepthScreenshot);
+
+	InputComponent->BindAction("SetRecordSettings", IE_Pressed, this, &AROXPlayerController::SetRecordSettings);
 }
 
 void AROXPlayerController::MoveForward(float Value)
 {
-	if (Value != 0.0f)
+	float val = JoystickAxisTunning(Value);
+	if (val != 0.0f)
 	{
 		if (!bMoveCameraModifier && !bMoveVRCameraControllersModifier)
 		{
@@ -80,24 +83,25 @@ void AROXPlayerController::MoveForward(float Value)
 													CachedPawn->GetActorLocation().Y + 10.f * Value * Direction.Y,
 													CachedPawn->GetActorLocation().Z + 10.f * Value * Direction.Z ));
 			*/
-			CachedPawn->AddActorLocalOffset((Value * GetWorld()->GetDeltaSeconds() * CachedPawn->GetSpeedModifier()) * GetActorForwardVector());
+			CachedPawn->AddActorLocalOffset((val * GetWorld()->GetDeltaSeconds() * CachedPawn->GetSpeedModifier()) * GetActorForwardVector());
 
 			//PlayerCameraManager->SetActorLocation(CachedPawn->GetActorLocation());
 		}
 		else if (bMoveVRCameraControllersModifier)
 		{
-			CachedPawn->MoveVRCameraControllersRelative(FVector(Value * GetWorld()->GetDeltaSeconds() * 15.0f, 0.0f, 0.0f));
+			CachedPawn->MoveVRCameraControllersRelative(FVector(val * GetWorld()->GetDeltaSeconds() * 15.0f, 0.0f, 0.0f));
 		}
 		else if (bMoveCameraModifier)
 		{
-			CachedPawn->MoveCameraRelative(FVector(Value * GetWorld()->GetDeltaSeconds() * 15.0f, 0.0f, 0.0f));
+			CachedPawn->MoveCameraRelative(FVector(val * GetWorld()->GetDeltaSeconds() * 15.0f, 0.0f, 0.0f));
 		}
 	}
 }	
 
 void AROXPlayerController::MoveRight(float Value)
 {
-	if (Value != 0.0f)
+	float val = JoystickAxisTunning(Value);
+	if (val != 0.0f)
 	{
 		if (!bMoveCameraModifier && !bMoveVRCameraControllersModifier)
 		{
@@ -107,16 +111,16 @@ void AROXPlayerController::MoveRight(float Value)
 													CachedPawn->GetActorLocation().Y + 10.f * Value * Direction.Y,
 													CachedPawn->GetActorLocation().Z + 10.f * Value * Direction.Z ));
 			*/
-			CachedPawn->AddActorLocalOffset(( Value * GetWorld()->GetDeltaSeconds() * CachedPawn->GetSpeedModifier()) * GetActorRightVector());
+			CachedPawn->AddActorLocalOffset((val * GetWorld()->GetDeltaSeconds() * CachedPawn->GetSpeedModifier()) * GetActorRightVector());
 			//PlayerCameraManager->SetActorLocation(CachedPawn->GetActorLocation());
 		}
 		else if (bMoveVRCameraControllersModifier)
 		{
-			CachedPawn->MoveVRCameraControllersRelative(FVector(0.0f, Value * GetWorld()->GetDeltaSeconds() * 15.0f, 0.0f));
+			CachedPawn->MoveVRCameraControllersRelative(FVector(0.0f, val * GetWorld()->GetDeltaSeconds() * 15.0f, 0.0f));
 		}
 		else if (bMoveCameraModifier)
 		{
-			CachedPawn->MoveCameraRelative(FVector(0.0f, Value * GetWorld()->GetDeltaSeconds() * 15.0f, 0.0f));
+			CachedPawn->MoveCameraRelative(FVector(0.0f, val * GetWorld()->GetDeltaSeconds() * 15.0f, 0.0f));
 		}
 	}
 }
@@ -342,4 +346,21 @@ void AROXPlayerController::TakeScreenshot()
 void AROXPlayerController::TakeDepthScreenshot()
 {
 	CachedPawn->GetTracker()->TakeScreenshot(EROXViewMode::RVM_Depth);
+}
+
+void AROXPlayerController::SetRecordSettings()
+{
+	CachedPawn->GetTracker()->SetRecordSettings();
+	ConsoleCommand("viewmode unlit");
+	ConsoleCommand("stat fps");
+	ConsoleCommand("t.MaxFps 60");
+}
+
+float AROXPlayerController::JoystickAxisTunning(float x)
+{
+	// Polynomial functions for which f(-1) = -1, f(0) = 0 y f(1) = 1
+	// They grow slower when x is near to 0, and faster when approaching to 1
+	//return x; // Lineal
+	return 0.8*x*x*x*x*x + 0.4*x*x*x + 0.04*x; // Smoother
+	//return 1.126*x*x*x*x*x - 0.165*x*x*x + 0.039*x; // Harsher
 }

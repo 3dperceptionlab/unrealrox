@@ -12,6 +12,7 @@
 #include "IImageWrapper.h"
 #include "IImageWrapperModule.h"
 #include "SharedPointer.h"
+#include "ROXTypes.h"
 #include "ROXTracker.generated.h"
 
 /*****************************************************************************
@@ -69,7 +70,7 @@ protected:
 	/* Directory where the raw TXT and JSON files folder will be created */
 	UPROPERTY(EditAnywhere)
 	FString scene_save_directory;
-	/* Folder where raw TXT and JSON files will be stored */
+	/* Folder where raw TXT and JSON files will be stored (just the name, without "/") */
 	UPROPERTY(EditAnywhere)
 	FString scene_folder;
 
@@ -78,15 +79,18 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Recording)
 	TArray<AROXBasePawn*> Pawns;
 	/* List of Cameras whose position and rotation will be tracked */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Recording)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Recording, meta = (EditCondition = "bRecordMode"))
 	TArray<ACameraActor*> CameraActors;
+	/* Focal distance in cm for the corresponding stereo camera in CameraActors list (0 if not stereo). */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Recording, meta = (EditCondition = "bRecordMode"))
+	TArray<float> CameraStereoFocalDistances;
 
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
 	/* Name prefix for the raw TXT scene files */
-	UPROPERTY(EditAnywhere, Category = Recording)
+	UPROPERTY(EditAnywhere, Category = Recording, meta = (EditCondition = "bRecordMode"))
 	FString scene_file_name_prefix;
 
 	/* JSON parser's input: raw TXT scene file name (without extension) */
@@ -97,62 +101,71 @@ protected:
 	FString output_scene_json_file_name;
 
 	/* List of sequences (JSON file names without extension) to be rebuilt */
-	UPROPERTY(EditAnywhere, Category = Playback)
+	UPROPERTY(EditAnywhere, Category = Playback, meta = (EditCondition = "!bRecordMode"))
 	TArray<FString> json_file_names;
 	/* List of start rebuild frames for the corresponding sequence from the previous sequence list */
-	UPROPERTY(EditAnywhere, Category = Playback)
+	UPROPERTY(EditAnywhere, Category = Playback, meta = (EditCondition = "!bRecordMode"))
 	TArray<int> start_frames;
 
+	/* If checked, the specified sequence will be played in viewport in real time, without generating any data */
+	UPROPERTY(EditAnywhere, Category = Playback, meta = (EditCondition = "!bRecordMode"))
+	bool playback_only;
+	/* Speed rate for the sequences played in viewport without generating data (from 0.1 - 4.0) */
+	UPROPERTY(EditAnywhere, Category = Playback, meta = (ClampMin = "0.1", ClampMax = "3.0", UIMin = "0.1", UIMax = "3.0", EditCondition = "playback_only"))
+	float playback_speed_rate;
+
+	bool frame_already_loaded;
+
 	/* If checked, RGB images (JPG RGB 8bit) will be generated for each frame of rebuilt sequences */
-	UPROPERTY(EditAnywhere, Category = Playback)
+	UPROPERTY(EditAnywhere, Category = Playback, meta = (EditCondition = "!bRecordMode"))
 	bool generate_rgb;
 	/* Format for RGB images (PNG ~3MB, JPG 95% ~800KB, JPG 80% ~120KB) */
-	UPROPERTY(EditAnywhere, Category = Playback)
+	UPROPERTY(EditAnywhere, Category = Playback, meta = (EditCondition = "generate_rgb"))
 	EROXRGBImageFormats format_rgb;
 	/* If checked, Depth images (PNG Gray 16bit) will be generated for each frame of rebuilt sequences */
-	UPROPERTY(EditAnywhere, Category = Playback)
+	UPROPERTY(EditAnywhere, Category = Playback, meta = (EditCondition = "!bRecordMode"))
 	bool generate_depth;
 	/* If checked, Object Mask images (PNG RGB 8bit) will be generated for each frame of rebuilt sequences */
-	UPROPERTY(EditAnywhere, Category = Playback)
+	UPROPERTY(EditAnywhere, Category = Playback, meta = (EditCondition = "!bRecordMode"))
 	bool generate_object_mask;
 	/* If checked, Normal images (PNG RGB 8bit) will be generated for each frame of rebuilt sequences */
-	UPROPERTY(EditAnywhere, Category = Playback)
+	UPROPERTY(EditAnywhere, Category = Playback, meta = (EditCondition = "!bRecordMode"))
 	bool generate_normal;
 	/* If checked, a TXT file with depth in cm for each pixel will be printed (WARNING: large size ~2MB per file) */
-	UPROPERTY(EditAnywhere, Category = Playback)
+	UPROPERTY(EditAnywhere, Category = Playback, meta = (EditCondition = "!bRecordMode"))
 	bool generate_depth_txt_cm;
 
 	/* Directory where the folder for storing generated images from rebuilt sequences will be created */
-	UPROPERTY(EditAnywhere, Category = Playback)
+	UPROPERTY(EditAnywhere, Category = Playback, meta = (EditCondition = "!bRecordMode"))
 	FString screenshots_save_directory;
 	/* Folder where generated images from rebuilt sequences will be stored */
-	UPROPERTY(EditAnywhere, Category = Playback)
+	UPROPERTY(EditAnywhere, Category = Playback, meta = (EditCondition = "!bRecordMode"))
 	FString screenshots_folder;
 
 	/* Width size for generated images */
-	UPROPERTY(EditAnywhere, Category = Playback)
-	int screenshot_width;
+	UPROPERTY(EditAnywhere, Category = Playback, meta = (EditCondition = "!bRecordMode"))
+	int generated_images_width;
 	/* Height size for generated images */
-	UPROPERTY(EditAnywhere, Category = Playback)
-	int screenshot_height;
+	UPROPERTY(EditAnywhere, Category = Playback, meta = (EditCondition = "!bRecordMode"))
+	int generated_images_height;
 
 	/* Number of frames until the next status output. At the beginning of the execution it will be shown more frequently. */
-	UPROPERTY(EditAnywhere, Category = Playback, AdvancedDisplay)
+	UPROPERTY(EditAnywhere, Category = Playback, AdvancedDisplay, meta = (EditCondition = "!bRecordMode"))
 	int frame_status_output_period;
 	/* Seconds to wait since execution starts until rebuild process does.*/
-	UPROPERTY(EditAnywhere, Category = Playback, AdvancedDisplay)
+	UPROPERTY(EditAnywhere, Category = Playback, AdvancedDisplay, meta = (EditCondition = "!bRecordMode"))
 	float initial_delay;
 	/* Seconds to wait since skeletons are placed until cameras can be placed (needed for avoiding failures with bone cameras positions, 0.1 is enough).*/
-	UPROPERTY(EditAnywhere, Category = Playback, AdvancedDisplay)
+	UPROPERTY(EditAnywhere, Category = Playback, AdvancedDisplay, meta = (EditCondition = "!bRecordMode"))
 	float place_cameras_delay;
 	/* Seconds to wait since rebuild is done until first camera is set and viewmode is changed (0.1 is enough).*/
-	UPROPERTY(EditAnywhere, Category = Playback, AdvancedDisplay)
+	UPROPERTY(EditAnywhere, Category = Playback, AdvancedDisplay, meta = (EditCondition = "!bRecordMode"))
 	float first_viewmode_of_frame_delay;
 	/* Seconds to wait since last image is generated until next viewmode can be changed (0.1 is enough, 0.2 is also good for slower PCs).*/
-	UPROPERTY(EditAnywhere, Category = Playback, AdvancedDisplay)
+	UPROPERTY(EditAnywhere, Category = Playback, AdvancedDisplay, meta = (EditCondition = "!bRecordMode"))
 	float change_viewmode_delay;
 	/* Seconds to wait since viewmode has changed until image is generated (0.1 is enough).*/
-	UPROPERTY(EditAnywhere, Category = Playback, AdvancedDisplay)
+	UPROPERTY(EditAnywhere, Category = Playback, AdvancedDisplay, meta = (EditCondition = "!bRecordMode"))
 	float take_screenshot_delay;
 
 	UPROPERTY(EditAnywhere, AdvancedDisplay)
@@ -177,8 +190,11 @@ protected:
 	UMaterial* DepthWUMat;
 	UMaterial* DepthCmMat;
 	UMaterial* NormalMat;
-	ASceneCapture2D* SceneCapture_depth;
-	UTextureRenderTarget2D* DepthTextureRenderer;
+	ASceneCapture2D* SceneCapture_Depth;
+	ASceneCapture2D* SceneCapture_Lit;
+	ASceneCapture2D* SceneCapture_Normal;
+	ASceneCapture2D* SceneCapture_Mask;
+	UTextureRenderTarget2D* TextureRenderer_Normal;
 
 	TArray<AActor*> ViewTargets;
 	int CurrentViewTarget;
@@ -217,6 +233,9 @@ public:
 	void VertexColor(FEngineShowFlags& ShowFlags);
 	void PostProcess(FEngineShowFlags& ShowFlags);
 	FEngineShowFlags* GameShowFlags;
+	ASceneCapture2D* SpawnSceneCapture(FString ActorName);
+	void SetViewmodeSceneCapture(ASceneCapture2D* SceneCapture, EROXViewMode vm);
+	ASceneCapture2D* GetSceneCapture(EROXViewMode vm);
 
 	void Lit();
 	void Object();
@@ -228,6 +247,9 @@ public:
 	void TakeScreenshot(EROXViewMode vm = EROXViewMode::RVM_Lit);
 	void TakeScreenshotFolder(EROXViewMode vm, FString CameraName);
 	void TakeDepthScreenshotFolder(const FString& FullFilename);
+	void TakeRGBScreenshotFolder(const FString& FullFilename, const EROXViewMode viewmode);
+	void TakeMaskScreenshotFolder(const FString& FullFilename, const EROXViewMode viewmode);
+	void TakeRenderTargetScreenshotFolder(const FString& FullFilename, const EROXViewMode viewmode);
 	void ChangeViewmode(EROXViewMode vm);
 	FString ViewmodeString(EROXViewMode vm);
 	EROXViewMode NextViewmode(EROXViewMode vm);
@@ -235,13 +257,14 @@ public:
 	void ChangeViewmodeDelegate(EROXViewMode vm);
 	void TakeScreenshotDelegate(EROXViewMode vm);
 
-	void CacheSceneActors(const TArray<FString> &PawnNames, const TArray<FString> &CameraNames);
+	void CacheSceneActors(const TArray<FROXPawnInfo> &PawnsInfo, const TArray<FROXCameraConfig> &CameraConfigs);
 	void DisableGravity();
 	void RestoreGravity();
 	void RebuildModeBegin();
 	void RebuildModeMain();
 	void RebuildModeMain_Camera();
 	void PrintStatusToLog(int startFrame, int64 startTimeSec, int64 lastFrameTimeSec, int currentFrame, int64 currentTimeSec, int totalFrames);
+	void SetRecordSettings();
 
 	UFUNCTION(CallInEditor, BlueprintCallable, Category="JSON Management")
 	void GenerateSequenceJson();

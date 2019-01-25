@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Camera/CameraActor.h"
 #include "ROXTypes.generated.h"
 
 USTRUCT()
@@ -57,5 +58,30 @@ struct FROXFrame
 	TMap<FString, FROXSkeletonState> Skeletons;
 
 	FROXFrame()
+	{}
+};
+
+USTRUCT()
+struct FROXCameraConfig
+{
+	GENERATED_USTRUCT_BODY()
+
+	FString CameraName;
+	float StereoFocalDistance;
+	float FieldOfView;
+
+	FROXCameraConfig()
+	{}
+};
+
+USTRUCT()
+struct FROXPawnInfo
+{
+	GENERATED_USTRUCT_BODY()
+
+	FString PawnName;
+	int NumBones;
+
+	FROXPawnInfo()
 	{}
 };
