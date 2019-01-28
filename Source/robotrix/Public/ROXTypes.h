@@ -52,6 +52,7 @@ struct FROXFrame
 	GENERATED_USTRUCT_BODY()
 
 	int n_frame;
+	int n_frame_generated;
 	float time_stamp;
 	TMap<FString, FROXActorState> Cameras;
 	TMap<FString, FROXActorStateExtended> Objects;
@@ -67,7 +68,7 @@ struct FROXCameraConfig
 	GENERATED_USTRUCT_BODY()
 
 	FString CameraName;
-	float StereoFocalDistance;
+	float StereoBaseline;
 	float FieldOfView;
 
 	FROXCameraConfig()

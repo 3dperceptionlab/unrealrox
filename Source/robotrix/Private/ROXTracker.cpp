@@ -50,6 +50,26 @@ AROXTracker::AROXTracker() :
 	PrimaryActorTick.bCanEverTick = bRecordMode;
 	PrimaryActorTick.bStartWithTickEnabled = true;
 
+	// Init structures for the bounding box visualizer
+	CubeShape = nullptr;
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> cubeFinder(TEXT("/Engine/BasicShapes/Cube.Cube"));
+	if (cubeFinder.Succeeded())
+	{
+		CubeShape = (UStaticMesh*)cubeFinder.Object;
+	}
+	GreenMat = nullptr;
+	static ConstructorHelpers::FObjectFinder<UMaterial> matGreen(TEXT("/Game/Common/Green.Green"));
+	if (matGreen.Succeeded())
+	{
+		GreenMat = (UMaterial*)matGreen.Object;
+	}
+	RedMat = nullptr;
+	static ConstructorHelpers::FObjectFinder<UMaterial> matRed(TEXT("/Game/Common/Red.Red"));
+	if (matRed.Succeeded())
+	{
+		RedMat = (UMaterial*)matRed.Object;
+	}
+
 	DepthMat = nullptr;
 	static ConstructorHelpers::FObjectFinder<UMaterial> matDepth(TEXT("/Game/Common/ViewModeMats/SceneDepth.SceneDepth"));
 	if (matDepth.Succeeded())
@@ -154,7 +174,7 @@ void AROXTracker::BeginPlay()
 	EROXViewMode_First = EROXViewModeList[0];
 	EROXViewMode_Last = EROXViewModeList.Last();
 
-	// Check that the last character of the directories is a slash
+	// Check that the last character of directories is a slash
 	if (scene_save_directory[scene_save_directory.Len() - 1] != '/')
 	{
 		scene_save_directory += "/";
@@ -162,6 +182,11 @@ void AROXTracker::BeginPlay()
 	if (screenshots_save_directory[screenshots_save_directory.Len() - 1] != '/')
 	{
 		screenshots_save_directory += "/";
+	}
+
+	while (CameraActors.Num() > StereoCameraBaselines.Num())
+	{
+		StereoCameraBaselines.Add(0.0);
 	}
 
 	if (!bRecordMode)
@@ -220,11 +245,6 @@ void AROXTracker::BeginPlay()
 			start_frames.Add(0);
 		}
 
-		while (CameraActors.Num() > CameraStereoFocalDistances.Num())
-		{
-			CameraStereoFocalDistances.Add(0.0);
-		}
-
 		if (playback_only)
 		{
 			playback_speed_rate = FMath::Clamp(playback_speed_rate, 0.1f, 3.0f);
@@ -236,6 +256,8 @@ void AROXTracker::BeginPlay()
 	{
 		PrintInstanceClassJson();
 	}
+
+	ViewBoundingBoxesInit();
 }
 
 // Called every frame
@@ -249,6 +271,128 @@ void AROXTracker::Tick(float DeltaTime)
 		{
 			WriteScene();
 		}
+		ViewBoundingBoxesMain();
+	}
+}
+
+void AROXTracker::ViewBoundingBoxesInit()
+{
+	// Aligned BoundingBoxes
+	BoundingBoxesVertexes.Empty();
+	for (int i = 0; i < ViewAlignedBoundingBox.Num(); ++i)
+	{
+		BoundingBoxesVertexes.Add(TArray<AStaticMeshActor*>());
+		for (int j = 0; j < 8; ++j)
+		{
+			FActorSpawnParameters ActorSpawnParams;
+			ActorSpawnParams.Name = FName(*("Vertex" + FString::FromInt(i) + "_" + FString::FromInt(j)));
+			AStaticMeshActor* CubeActor = GetWorld()->SpawnActor<AStaticMeshActor>(FVector(0.0f, 0.0f, 0.0f), FRotator(0.0f, 0.0f, 0.0f), ActorSpawnParams);
+			CubeActor->GetStaticMeshComponent()->SetStaticMesh(CubeShape);
+			CubeActor->GetStaticMeshComponent()->SetMaterial(0, GreenMat);
+			CubeActor->SetActorScale3D(FVector(0.02f, 0.02f, 0.02f));
+			CubeActor->SetActorEnableCollision(false);
+			CubeActor->SetMobility(EComponentMobility::Movable);
+			CubeActor->GetStaticMeshComponent()->SetEnableGravity(false);
+			CubeActor->GetStaticMeshComponent()->SetSimulatePhysics(false);
+			BoundingBoxesVertexes[i].Add(CubeActor);
+		}
+		BoundingBoxesVertexes[i][0]->SetActorScale3D(FVector(0.03f, 0.03f, 0.03f));
+		BoundingBoxesVertexes[i][1]->SetActorScale3D(FVector(0.03f, 0.03f, 0.03f));
+	}
+
+	// Oriented BoundingBoxes
+	VertexesOBBs.Empty();
+	BoundingBoxesVertexesOBB.Empty();
+	for (int i = 0; i < ViewOrientedBoundingBox.Num(); ++i)
+	{
+		FRotator objRot = ViewOrientedBoundingBox[i]->GetActorRotation();
+		FVector objLoc = ViewOrientedBoundingBox[i]->GetActorLocation();
+		ViewOrientedBoundingBox[i]->SetActorLocation(FVector(0.0f, 0.0f, 0.0f));
+		ViewOrientedBoundingBox[i]->SetActorRotation(FRotator(0.0f, 0.0f, 0.0f));
+		FBox ABB = ViewOrientedBoundingBox[i]->GetComponentsBoundingBox();
+		FVector min = ABB.Min;
+		FVector max = ABB.Max;
+		FVector diff = max - min;
+		VertexesOBBs.Add(TArray<FVector>());
+		VertexesOBBs[i].Add(min);
+		VertexesOBBs[i].Add(max);
+		VertexesOBBs[i].Add(min + FVector(diff.X, 0.0f, 0.0f));
+		VertexesOBBs[i].Add(min + FVector(0.0f, diff.Y, 0.0f));
+		VertexesOBBs[i].Add(min + FVector(0.0f, 0.0f, diff.Z));
+		VertexesOBBs[i].Add(min + FVector(diff.X, diff.Y, 0.0f));
+		VertexesOBBs[i].Add(min + FVector(diff.X, 0.0f, diff.Z));
+		VertexesOBBs[i].Add(min + FVector(0.0f, diff.Y, diff.Z));
+
+		ViewOrientedBoundingBox[i]->SetActorLocation(objLoc);
+		ViewOrientedBoundingBox[i]->SetActorRotation(objRot);
+
+		BoundingBoxesVertexesOBB.Add(TArray<AStaticMeshActor*>());
+		for (int j = 0; j < 8; ++j)
+		{
+			FActorSpawnParameters ActorSpawnParams;
+			ActorSpawnParams.Name = FName(*("VertexOBB" + FString::FromInt(i) + "_" + FString::FromInt(j)));
+			AStaticMeshActor* CubeActor = GetWorld()->SpawnActor<AStaticMeshActor>(FVector(0.0f, 0.0f, 0.0f), FRotator(0.0f, 0.0f, 0.0f), ActorSpawnParams);
+			CubeActor->GetStaticMeshComponent()->SetStaticMesh(CubeShape);
+			CubeActor->GetStaticMeshComponent()->SetMaterial(0, RedMat);
+			CubeActor->SetActorScale3D(FVector(0.02f, 0.02f, 0.02f));
+			CubeActor->SetActorEnableCollision(false);
+			CubeActor->SetMobility(EComponentMobility::Movable);
+			CubeActor->GetStaticMeshComponent()->SetEnableGravity(false);
+			CubeActor->GetStaticMeshComponent()->SetSimulatePhysics(false);
+			BoundingBoxesVertexesOBB[i].Add(CubeActor);
+		}
+		BoundingBoxesVertexesOBB[i][0]->SetActorScale3D(FVector(0.03f, 0.03f, 0.03f));
+		BoundingBoxesVertexesOBB[i][1]->SetActorScale3D(FVector(0.03f, 0.03f, 0.03f));
+	}
+}
+
+void AROXTracker::ViewBoundingBoxesMain()
+{
+	// Aligned BoundingBoxes
+	for (int i = 0; i < ViewAlignedBoundingBox.Num(); ++i)
+	{
+		TArray<FVector> Vertexes;
+
+		FBox ABB = ViewAlignedBoundingBox[i]->GetComponentsBoundingBox();
+		FVector min = ABB.Min;
+		FVector max = ABB.Max;
+		FVector diff = max - min;
+		Vertexes.Add(min);
+		Vertexes.Add(max);
+		Vertexes.Add(min + FVector(diff.X, 0.0f, 0.0f));
+		Vertexes.Add(min + FVector(0.0f, diff.Y, 0.0f));
+		Vertexes.Add(min + FVector(0.0f, 0.0f, diff.Z));
+		Vertexes.Add(min + FVector(diff.X, diff.Y, 0.0f));
+		Vertexes.Add(min + FVector(diff.X, 0.0f, diff.Z));
+		Vertexes.Add(min + FVector(0.0f, diff.Y, diff.Z));
+
+		/*FVector boxCenter, boxSize;
+		ViewBoundingBoxes[i]->GetActorBounds(false, boxCenter, boxSize);
+		Vertexes.Add(boxCenter + FVector(boxSize.X, boxSize.Y, boxSize.Z));
+		Vertexes.Add(boxCenter + FVector(-boxSize.X, boxSize.Y, boxSize.Z));
+		Vertexes.Add(boxCenter + FVector(boxSize.X, -boxSize.Y, boxSize.Z));
+		Vertexes.Add(boxCenter + FVector(boxSize.X, boxSize.Y, -boxSize.Z));
+		Vertexes.Add(boxCenter + FVector(-boxSize.X, -boxSize.Y, boxSize.Z));
+		Vertexes.Add(boxCenter + FVector(boxSize.X, -boxSize.Y, -boxSize.Z));
+		Vertexes.Add(boxCenter + FVector(-boxSize.X, boxSize.Y, -boxSize.Z));
+		Vertexes.Add(boxCenter + FVector(-boxSize.X, -boxSize.Y, -boxSize.Z));*/
+
+		for (int j = 0; j < Vertexes.Num(); ++j)
+		{
+			BoundingBoxesVertexes[i][j]->SetActorLocation(Vertexes[j]);
+		}
+	}
+
+	// Oriented BoundingBoxes
+	for (int i = 0; i < ViewOrientedBoundingBox.Num(); ++i)
+	{
+		FVector objLoc = ViewOrientedBoundingBox[i]->GetActorLocation();
+		FRotator objRot = ViewOrientedBoundingBox[i]->GetActorRotation();
+
+		for (int j = 0; j < BoundingBoxesVertexesOBB[i].Num(); ++j)
+		{
+			BoundingBoxesVertexesOBB[i][j]->SetActorLocation(objRot.RotateVector(VertexesOBBs[i][j]) + objLoc);
+		}
 	}
 }
 
@@ -260,6 +404,44 @@ void AROXTracker::Tick(float DeltaTime)
 //   |_| \_\___|\___\___/|_|  \__,_|_|_| |_|\__, |
 //                                          |___/ 
 
+FString GetOBBPointsStr(AStaticMeshActor* sm)
+{
+	FString OBBStr("");
+
+	auto mob = sm->GetStaticMeshComponent()->Mobility;
+	bool mobility_changed = false;
+
+	if (mob != EComponentMobility::Movable)
+	{
+		sm->SetMobility(EComponentMobility::Movable);
+		mobility_changed = true;
+	}
+	FVector sm_location = sm->GetActorLocation();
+	FRotator sm_rotation = sm->GetActorRotation();
+	sm->SetActorLocation(FVector(0.0f, 0.0f, 0.0f));
+	sm->SetActorRotation(FRotator(0.0f, 0.0f, 0.0f));
+	FBox sm_bbox = sm->GetComponentsBoundingBox();
+	sm->SetActorLocation(sm_location);
+	sm->SetActorRotation(sm_rotation);
+	if (mobility_changed)
+	{
+		sm->SetMobility(mob);
+	}
+
+	FVector min_max_diff = sm_bbox.Max - sm_bbox.Min;
+
+	OBBStr += "OBB:" + (sm_bbox.Min + FVector(min_max_diff.X, min_max_diff.Y, 0.0f)).ToString() + " "
+		+ (sm_bbox.Max).ToString() + " "
+		+ (sm_bbox.Min + FVector(0.0f, min_max_diff.Y, min_max_diff.Z)).ToString() + " "
+		+ (sm_bbox.Min + FVector(0.0f, min_max_diff.Y, 0.0f)).ToString() + " "
+		+ (sm_bbox.Min + FVector(min_max_diff.X, 0.0f, 0.0f)).ToString() + " "
+		+ (sm_bbox.Min + FVector(min_max_diff.X, 0.0f, min_max_diff.Z)).ToString() + " "
+		+ (sm_bbox.Min + FVector(0.0f, 0.0f, min_max_diff.Z)).ToString() + " "
+		+ (sm_bbox.Min).ToString();
+
+	return OBBStr;
+}
+
 void AROXTracker::WriteHeader()
 {
 	//Camera Info
@@ -267,14 +449,19 @@ void AROXTracker::WriteHeader()
 	for (int i = 0; i < CameraActors.Num(); i++)
 	{
 		ACameraActor* CameraActor = CameraActors[i];
-		float stereo_dist(CameraStereoFocalDistances[i]);
+		float stereo_dist(StereoCameraBaselines[i]);
 		float field_of_view(CameraActor->GetCameraComponent()->FieldOfView);
 		begin_string_ += CameraActor->GetName() + " " + FString::SanitizeFloat(stereo_dist) + " " + FString::SanitizeFloat(field_of_view) + "\r\n";
 	}
 
 	// Movable StaticMeshActor dump
 	CacheStaticMeshActors();
-	begin_string_ += "Objects " + FString::FromInt(CachedSM.Num()) + "\r\n";
+	FString staticdump("");
+	for (AStaticMeshActor* sm : CachedSM)
+	{
+		staticdump += sm->GetName() + " " + GetOBBPointsStr(sm) + "\r\n";
+	}
+	begin_string_ += "Objects " + FString::FromInt(CachedSM.Num()) + "\r\n" + staticdump;
 
 	// Pawns dump
 	FString skeletaldump("");
@@ -297,10 +484,11 @@ void AROXTracker::WriteHeader()
 			FString actor_full_name_ = Itr->GetFullName();
 			FVector actor_location_ = Itr->GetActorLocation();
 			FRotator actor_rotation_ = Itr->GetActorRotation();
-
-			nonmovabledump += actor_name_ + " " + actor_location_.ToString() + " " + actor_rotation_.ToString()
-				+ " MIN:" + Itr->GetComponentsBoundingBox(true).Min.ToString() + " MAX:" + Itr->GetComponentsBoundingBox(true).Max.ToString() +
-				((bDebugMode) ? (" " + actor_full_name_ + "\r\n") : "\r\n");
+			FBox actor_bbox = Itr->GetComponentsBoundingBox(true);
+			nonmovabledump += actor_name_ + " " + actor_location_.ToString() + " " + actor_rotation_.ToString();
+			nonmovabledump += " MIN:" + actor_bbox.Min.ToString() + " MAX:" + actor_bbox.Max.ToString();
+			nonmovabledump += " " + GetOBBPointsStr(*Itr);
+			nonmovabledump += ((bDebugMode) ? (" " + actor_full_name_ + "\r\n") : "\r\n");
 		}
 	}
 	begin_string_ += "NonMovableObjects " + FString::FromInt(n_nonmovable) + "\r\n" + nonmovabledump;
@@ -999,7 +1187,7 @@ void AROXTracker::CacheSceneActors(const TArray<FROXPawnInfo> &PawnsInfo, const 
 
 	// Cameras dump
 	CameraActors.Empty();
-	CameraStereoFocalDistances.Empty();
+	StereoCameraBaselines.Empty();
 	for (TActorIterator <ACameraActor> ActorItr(GetWorld()); ActorItr; ++ActorItr)
 	{
 		ActorItr->DetachFromActor(FDetachmentTransformRules(EDetachmentRule::KeepWorld, true));
@@ -1015,24 +1203,24 @@ void AROXTracker::CacheSceneActors(const TArray<FROXPawnInfo> &PawnsInfo, const 
 		cam_spawn->SetActorLabel(camConfig.CameraName);
 		cam_spawn->GetCameraComponent()->SetFieldOfView(camConfig.FieldOfView);
 		CameraActors.Add(cam_spawn);
-		CameraStereoFocalDistances.Add(camConfig.StereoFocalDistance);
+		StereoCameraBaselines.Add(camConfig.StereoBaseline);
 
 		// Stereo
-		if (camConfig.StereoFocalDistance > 0.0)
+		if (camConfig.StereoBaseline > 0.0)
 		{
 			ActorSpawnParams.Name = FName(*(camConfig.CameraName + "_Left_REBUILD"));
 			ACameraActor* stereo_left = GetWorld()->SpawnActor<ACameraActor>(ACameraActor::StaticClass(), ActorSpawnParams);
 			stereo_left->SetActorLabel(camConfig.CameraName + "_Left");
 			stereo_left->GetCameraComponent()->SetFieldOfView(camConfig.FieldOfView);
 			CameraActors.Add(stereo_left);
-			CameraStereoFocalDistances.Add(-1);
+			StereoCameraBaselines.Add(-1);
 
 			ActorSpawnParams.Name = FName(*(camConfig.CameraName + "_Right_REBUILD"));
 			ACameraActor* stereo_right = GetWorld()->SpawnActor<ACameraActor>(ACameraActor::StaticClass(), ActorSpawnParams);
 			stereo_right->SetActorLabel(camConfig.CameraName + "_Right");
 			stereo_right->GetCameraComponent()->SetFieldOfView(camConfig.FieldOfView);
 			CameraActors.Add(stereo_right);
-			CameraStereoFocalDistances.Add(-1);
+			StereoCameraBaselines.Add(-1);
 		}
 	}
 
@@ -1156,11 +1344,14 @@ void AROXTracker::RebuildModeBegin()
 	DisableGravity();
 
 	// Init viewtarget
-	for (AROXBasePawn* p : Pawns)
+	if (CameraActors.Num() > 0)
 	{
-		p->CheckFirstPersonCamera(CameraActors[CurrentCamRebuildMode]);
+		for (AROXBasePawn* p : Pawns)
+		{
+			p->CheckFirstPersonCamera(CameraActors[CurrentCamRebuildMode]);
+		}
+		ControllerPawn->ChangeViewTarget(CameraActors[CurrentCamRebuildMode]);
 	}
-	ControllerPawn->ChangeViewTarget(CameraActors[CurrentCamRebuildMode]);
 
 	if (JsonParser->GetNumFrames() > 0)
 	{
@@ -1268,15 +1459,15 @@ void AROXTracker::RebuildModeMain_Camera()
 			CameraActors[i]->SetActorLocationAndRotation(CamState->Position, CamState->Rotation);
 
 			// Stereo
-			if (CameraStereoFocalDistances[i] > 0.0f)
+			if (StereoCameraBaselines[i] > 0.0f)
 			{
 				FRotator camera_rotation = FRotator(CamState->Rotation);
 
-				FVector stereo_left_vector(0.0f, (-1)*CameraStereoFocalDistances[i]*0.5f, 0.0f);
+				FVector stereo_left_vector(0.0f, (-1)*StereoCameraBaselines[i]*0.5f, 0.0f);
 				FVector stereo_left_vector_rot = camera_rotation.RotateVector(stereo_left_vector);
 				CameraActors[i + 1]->SetActorLocationAndRotation(CamState->Position + stereo_left_vector_rot, CamState->Rotation);
 
-				FVector stereo_right_vector(0.0f, CameraStereoFocalDistances[i]*0.5f, 0.0f);
+				FVector stereo_right_vector(0.0f, StereoCameraBaselines[i]*0.5f, 0.0f);
 				FVector stereo_right_vector_rot = camera_rotation.RotateVector(stereo_right_vector);
 				CameraActors[i + 2]->SetActorLocationAndRotation(CamState->Position + stereo_right_vector_rot, CamState->Rotation);
 
@@ -1314,7 +1505,10 @@ void AROXTracker::PrintStatusToLog(int startFrame, int64 startTimeSec, int64 las
 		int lastFrameElapsedTimeSec = (int)(currentTimeSec - lastFrameTimeSec);
 
 		FString status_msg("Frame " + FString::FromInt(nDoneFrames) + " / " + FString::FromInt(totalFramesForRebuild) + " (" + FString::FromInt(currentFrame) + "/" + FString::FromInt(totalFrames) + ")");
-		status_msg += " - Estimated Remaining Time: " + SecondsToString(remainingTimeSec) + " - Last Frame Time: " + FString::FromInt(lastFrameElapsedTimeSec) + "sec - Total Elapsed Time: " + SecondsToString(elapsedTimeSec);
+		if (!playback_only)
+		{
+			status_msg += " - Estimated Remaining Time: " + SecondsToString(remainingTimeSec) + " - Last Frame Time: " + FString::FromInt(lastFrameElapsedTimeSec) + "sec - Total Elapsed Time: " + SecondsToString(elapsedTimeSec);
+		}
 
 		UE_LOG(LogTemp, Warning, TEXT("%s"), *status_msg);
 	}

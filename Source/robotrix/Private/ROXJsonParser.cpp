@@ -46,7 +46,7 @@ bool ROXJsonParser::LoadFile(FString JsonFilePath)
 
 				FROXCameraConfig camConf;
 				camConf.CameraName = CurrentCameraObject->GetStringField("name");
-				camConf.StereoFocalDistance = CurrentCameraObject->GetNumberField("stereo");
+				camConf.StereoBaseline = CurrentCameraObject->GetNumberField("stereo");
 				camConf.FieldOfView = CurrentCameraObject->GetNumberField("fov");
 				CameraConfigs.Add(camConf);
 			}
@@ -83,6 +83,11 @@ FROXFrame ROXJsonParser::GetFrameData(uint64 nFrame)
 
 	Frame.time_stamp = FrameObject->GetNumberField("timestamp");
 	Frame.n_frame = FrameObject->GetIntegerField("id");
+	Frame.n_frame_generated = 0;
+	if (FrameObject->HasField("id_generated"))
+	{
+		Frame.n_frame_generated = FrameObject->GetIntegerField("id_generated");
+	}
 
 	// Objects (StaticMesh)
 	TArray<TSharedPtr<FJsonValue>> ObjectsJson = FrameObject->GetArrayField("objects");
@@ -242,14 +247,42 @@ void ROXJsonParser::SceneTxtToJson(FString path, FString txt_filename, FString j
 		}
 
 		// Get Objects
+		TArray<TSharedPtr<FJsonValue>> JsonArray_SequenceObjects;
 		int startLine_Objects = startLine_Cameras + 1 + numCameras;
 		TArray<FString> line_numObjects;
 		txt_file_lines[startLine_Objects].ParseIntoArray(line_numObjects, TEXT(" "));
 		int numObjects = FCString::Atoi(*line_numObjects[1]);
+		int numObjects_h = numObjects;
+		bool no_obb = false;
+
+		for (int i = startLine_Objects + 1; (i < startLine_Objects + numObjects + 1) && !no_obb; ++i)
+		{
+			TArray<FString> line_obj;
+			txt_file_lines[i].ParseIntoArray(line_obj, TEXT(" "));
+			if (line_obj.Num() < 9)
+			{
+				no_obb = true;
+				numObjects_h = 0;
+			}
+
+			if (!no_obb)
+			{
+				TSharedPtr<FJsonObject> Json_Object = MakeShareable(new FJsonObject());
+				Json_Object->SetStringField("name", line_obj[0]);
+
+				TArray<TSharedPtr<FJsonValue>> JsonArray_ObjectOBB;
+				for (int i = 0; i < 8; ++i)
+				{
+					JsonArray_ObjectOBB.Add(MakeShareable(new FJsonValueObject(JsonObjectXYZ(FloatTxt(line_obj[3 * i + 1]), FloatTxt(line_obj[3 * i + 2]), FloatTxt(line_obj[3 * i + 3])))));
+				}
+				Json_Object->SetArrayField("obb", JsonArray_ObjectOBB);
+				JsonArray_SequenceObjects.Add(MakeShareable(new FJsonValueObject(Json_Object)));
+			}
+		}
 
 		// GetSkeletons
 		TArray<TSharedPtr<FJsonValue>> JsonArray_SequenceSkeletons;
-		int startLine_Skeletons = startLine_Objects + 1;
+		int startLine_Skeletons = startLine_Objects + 1 + numObjects_h;
 		TArray<FString> line_numSkeletons;
 		txt_file_lines[startLine_Skeletons].ParseIntoArray(line_numSkeletons, TEXT(" "));
 		int numSkeletons = FCString::Atoi(*line_numSkeletons[1]);
@@ -286,6 +319,15 @@ void ROXJsonParser::SceneTxtToJson(FString path, FString txt_filename, FString j
 			Json_NonMovableObject->SetObjectField("rotation", JsonObjectPitchYawRoll(FloatTxt(line_nm[4]), FloatTxt(line_nm[5]), FloatTxt(line_nm[6])));
 			Json_NonMovableObject->SetObjectField("boundingbox_min", JsonObjectXYZ(FloatTxt(line_nm[7]), FloatTxt(line_nm[8]), FloatTxt(line_nm[9])));
 			Json_NonMovableObject->SetObjectField("boundingbox_max", JsonObjectXYZ(FloatTxt(line_nm[10]), FloatTxt(line_nm[11]), FloatTxt(line_nm[12])));
+			if (line_nm.Num() > 13)
+			{
+				TArray<TSharedPtr<FJsonValue>> JsonArray_NonMovableObjectOBB;
+				for (int i = 0; i < 8; ++i)
+				{
+					JsonArray_NonMovableObjectOBB.Add(MakeShareable(new FJsonValueObject(JsonObjectXYZ(FloatTxt(line_nm[3 * i + 13]), FloatTxt(line_nm[3 * i + 14]), FloatTxt(line_nm[3 * i + 15])))));
+				}
+				Json_NonMovableObject->SetArrayField("obb", JsonArray_NonMovableObjectOBB);
+			}
 			JsonArray_SequenceNonMovable.Add(MakeShareable(new FJsonValueObject(Json_NonMovableObject)));
 		}
 
@@ -304,6 +346,7 @@ void ROXJsonParser::SceneTxtToJson(FString path, FString txt_filename, FString j
 		}
 		int nEstimatedFrames = (txt_file_lines.Num() - c_line) / numLinesPerFrame;
 		int frameId = 0;
+		int frameGeneratedId = 0;
 
 		while (c_line + numLinesPerFrame <= txt_file_lines.Num())
 		{
@@ -311,10 +354,12 @@ void ROXJsonParser::SceneTxtToJson(FString path, FString txt_filename, FString j
 
 			// frame
 			c_line++;
+			frameGeneratedId++;
 			TArray<FString> line_id_frame;
 			txt_file_lines[c_line].ParseIntoArray(line_id_frame, TEXT(" "));
 			frameId = FCString::Atoi(*line_id_frame[0]);
 			Json_Frames->SetStringField("id", IntToStringDigits(frameId, 6));
+			Json_Frames->SetNumberField("id_generated", frameGeneratedId);
 			float timestamp = FCString::Atof(*line_id_frame[1]);
 			Json_Frames->SetNumberField("timestamp", timestamp);
 
@@ -406,6 +451,10 @@ void ROXJsonParser::SceneTxtToJson(FString path, FString txt_filename, FString j
 		JsonSequence->SetNumberField("total_time", totalTime);
 		JsonSequence->SetNumberField("mean_framerate", numFrames / totalTime);
 		JsonSequence->SetArrayField("cameras", JsonArray_SequenceCameras);
+		if (!no_obb)
+		{
+			JsonSequence->SetArrayField("objects", JsonArray_SequenceObjects);
+		}
 		JsonSequence->SetArrayField("skeletons", JsonArray_SequenceSkeletons);
 		JsonSequence->SetArrayField("non_movable_objects", JsonArray_SequenceNonMovable);
 		JsonSequence->SetArrayField("frames", JsonArray_SequenceFrames);

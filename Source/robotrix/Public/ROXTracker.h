@@ -81,9 +81,17 @@ public:
 	/* List of Cameras whose position and rotation will be tracked */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Recording, meta = (EditCondition = "bRecordMode"))
 	TArray<ACameraActor*> CameraActors;
-	/* Focal distance in cm for the corresponding stereo camera in CameraActors list (0 if not stereo). */
+	/* Baseline in cm for the corresponding stereo camera in CameraActors list (0 if not stereo). */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Recording, meta = (EditCondition = "bRecordMode"))
-	TArray<float> CameraStereoFocalDistances;
+	TArray<float> StereoCameraBaselines;
+
+	/* Bounding Box visualizer structures */
+	UMaterial* GreenMat;
+	UMaterial* RedMat;
+	UStaticMesh* CubeShape;
+	TArray<TArray<AStaticMeshActor*>> BoundingBoxesVertexes;
+	TArray<TArray<AStaticMeshActor*>> BoundingBoxesVertexesOBB;
+	TArray<TArray<FVector>> VertexesOBBs;
 
 protected:
 	// Called when the game starts or when spawned
@@ -174,6 +182,12 @@ protected:
 	FString Persistence_Level_Filter_Str;
 	UPROPERTY(EditAnywhere, AdvancedDisplay)
 	bool bDebugMode;
+	/* Aligned bounding box vertexes of listed static meshes will be represented with small green cubes.*/
+	UPROPERTY(EditAnywhere, AdvancedDisplay, BlueprintReadOnly)
+	TArray<AStaticMeshActor*> ViewAlignedBoundingBox;
+	/* Oriented bounding box vertexes of listed static meshes will be represented with small red cubes.*/
+	UPROPERTY(EditAnywhere, AdvancedDisplay, BlueprintReadOnly)
+	TArray<AStaticMeshActor*> ViewOrientedBoundingBox;
 
 	bool bIsRecording;
 
@@ -220,6 +234,9 @@ public:
 
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+
+	void ViewBoundingBoxesInit();
+	void ViewBoundingBoxesMain();
 
 	void WriteHeader();
 	void WriteScene();
@@ -302,7 +319,15 @@ protected:
 	{
 		// Place the Async Code here.  This function runs automatically.
 		// Text File
-		FFileHelper::SaveStringToFile(m_str, *m_absolute_file_path, FFileHelper::EEncodingOptions::AutoDetect, &IFileManager::Get(), EFileWrite::FILEWRITE_Append);
+		FFileHelper::SaveStringToFile(m_str, *m_absolute_file_path, FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM, &IFileManager::Get(), EFileWrite::FILEWRITE_Append);
+		/*IFileManager* FileManager = &IFileManager::Get();
+		auto Ar = TUniquePtr<FArchive>(FileManager->CreateFileWriter(*m_absolute_file_path, EFileWrite::FILEWRITE_Append));
+		if (Ar && !m_str.IsEmpty())
+		{
+			const TCHAR* StrPtr = *m_str;
+			FTCHARToUTF8 UTF8String(StrPtr);
+			Ar->Serialize((UTF8CHAR*)UTF8String.Get(), UTF8String.Length() * sizeof(UTF8CHAR));
+		}*/
 	}
 
 	// This next section of code needs to be here.  Not important as to why.
