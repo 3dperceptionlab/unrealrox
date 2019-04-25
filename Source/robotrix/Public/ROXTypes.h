@@ -7,6 +7,8 @@
 #include "Camera/CameraActor.h"
 #include "ROXTypes.generated.h"
 
+DECLARE_LOG_CATEGORY_EXTERN(LogUnrealROX, Log, All);
+
 USTRUCT()
 struct FROXActorState
 {
@@ -84,5 +86,33 @@ struct FROXPawnInfo
 	int NumBones;
 
 	FROXPawnInfo()
+	{}
+};
+
+USTRUCT()
+struct FROXMeshComponentMaterials
+{
+	GENERATED_USTRUCT_BODY()
+
+	UMeshComponent* MeshComponent;
+	TArray<UMaterialInterface*> DefaultMaterials;
+	FLinearColor MaskMaterialLinearColor;
+	FColor MaskMaterialColor;
+	UMaterialInstanceDynamic* MaskMaterial;
+
+	FROXMeshComponentMaterials()
+	{}
+};
+
+USTRUCT()
+struct FROXSceneObject
+{
+	GENERATED_USTRUCT_BODY()
+
+	FName instance_name;
+	FColor instance_color;
+	FName instance_class;
+
+	FROXSceneObject()
 	{}
 };

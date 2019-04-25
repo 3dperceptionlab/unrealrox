@@ -20,6 +20,11 @@ public:
 	static FString IntToStringDigits(int i, int nDigits);
 	static void SceneTxtToJson(FString path, FString txt_filename, FString json_filename);
 
+	static TSharedPtr<FJsonObject> FColorToJson(FColor color);
+	static FColor JsonToFColor(TSharedPtr<FJsonObject> JsonObject);
+	static TMap<FName, FROXSceneObject> LoadSceneObjects(FString filename);
+	static bool WriteSceneObjects(TMap<AActor*, TArray<FROXMeshComponentMaterials>> MeshMaterials, FString filename);
+
 	FORCEINLINE uint64 GetNumFrames() const
 	{
 		return NumFrames;

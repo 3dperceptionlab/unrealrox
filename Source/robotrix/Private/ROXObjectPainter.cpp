@@ -192,7 +192,7 @@ void FROXObjectPainter::Reset(ULevel* InLevel)
 		FString ActorId = Elem.Key;
 		FColor NewColor = Elem.Value;
 		AActor* Actor = Id2Actor[ActorId];
-		check(PaintObject(Actor, NewColor));
+		check(PaintObject(Actor, NewColor, false));
 	}
 }
 

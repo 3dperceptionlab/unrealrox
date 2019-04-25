@@ -65,12 +65,12 @@ bool ROXJsonParser::LoadFile(FString JsonFilePath)
 		}
 		else
 		{
-			UE_LOG(LogTemp, Warning, TEXT("JSON couldn't be deserialized."));
+			UE_LOG(LogUnrealROX, Warning, TEXT("JSON couldn't be deserialized."));
 		}
 	}
 	else
 	{
-		UE_LOG(LogTemp, Warning, TEXT("JSON couldn't be read."));
+		UE_LOG(LogUnrealROX, Warning, TEXT("JSON couldn't be read."));
 	}
 
 	return file_loaded;
@@ -477,4 +477,97 @@ void ROXJsonParser::SceneTxtToJson(FString path, FString txt_filename, FString j
 		FString error_message("Scene TXT file named " + txt_filename + ".txt does not exist.");
 		UE_LOG(LogTemp, Warning, TEXT("%s"), *error_message);
 	}
+}
+
+FColor ROXJsonParser::JsonToFColor(TSharedPtr<FJsonObject> JsonObject)
+{
+	int r = JsonObject->GetIntegerField("r");
+	int g = JsonObject->GetIntegerField("g");
+	int b = JsonObject->GetIntegerField("b");
+	return FColor(r, g, b, 255);
+}
+
+TSharedPtr<FJsonObject> ROXJsonParser::FColorToJson(FColor color)
+{
+	TSharedPtr<FJsonObject> JsonObject_Color = MakeShareable(new FJsonObject());
+	JsonObject_Color->SetNumberField("r", color.R);
+	JsonObject_Color->SetNumberField("g", color.G);
+	JsonObject_Color->SetNumberField("b", color.B);
+	return JsonObject_Color;
+}
+
+TMap<FName, FROXSceneObject> ROXJsonParser::LoadSceneObjects(FString filename)
+{
+	TMap<FName, FROXSceneObject> sceneObjects;
+	bool file_loaded = false;
+	FString JsonRaw;
+	file_loaded = FFileHelper::LoadFileToString(JsonRaw, *filename);
+
+	if (file_loaded)
+	{
+		//Create a json object to store the information from the json string
+		//The json reader is used to deserialize the json object later on
+		TSharedPtr<FJsonObject> JsonObject = MakeShareable(new FJsonObject());
+		TSharedRef<TJsonReader<TCHAR>> JsonReader = TJsonReaderFactory<TCHAR>::Create(JsonRaw);
+
+		if (FJsonSerializer::Deserialize(JsonReader, JsonObject) && JsonObject.IsValid())
+		{
+			TArray<TSharedPtr<FJsonValue>> SceneObjectsJsonArray = JsonObject->GetArrayField("SceneObjects");
+			TSharedPtr<FJsonObject> CurrentSceneObject;
+			for (int32 i = 0; i < SceneObjectsJsonArray.Num(); ++i)
+			{
+				CurrentSceneObject = SceneObjectsJsonArray[i]->AsObject();
+
+				FName sceneObjectName = FName(*CurrentSceneObject->GetStringField("instance_name"));
+				FROXSceneObject sceneObject;
+				sceneObject.instance_name = sceneObjectName;
+				sceneObject.instance_color = JsonToFColor(CurrentSceneObject->GetObjectField("instance_color"));
+				sceneObject.instance_class = FName(*CurrentSceneObject->GetStringField("class"));
+				sceneObjects.Add(sceneObjectName, sceneObject);
+			}
+		}
+	}
+
+	return sceneObjects;
+}
+
+bool ROXJsonParser::WriteSceneObjects(TMap<AActor*, TArray<FROXMeshComponentMaterials>> MeshMaterials, FString filename)
+{
+	bool printed = false;
+
+	if (MeshMaterials.Num() > 0)
+	{
+		TSharedPtr<FJsonObject> JsonObject = MakeShareable(new FJsonObject);
+		TArray<TSharedPtr<FJsonValue>> JsonArray_SceneObjects;
+
+		TArray<AActor*> ActorRefs;
+		TArray<FString> PrevActorNames;
+		MeshMaterials.GetKeys(ActorRefs);
+
+		for (AActor* ActorRef : ActorRefs)
+		{
+			TArray<FROXMeshComponentMaterials> ActorMaterials = *MeshMaterials.Find(ActorRef);
+
+			if (PrevActorNames.Find(ActorRef->GetName()) == INDEX_NONE)
+			{
+				PrevActorNames.Add(ActorRef->GetName());
+				TSharedPtr<FJsonObject> JsonObject_SceneObject = MakeShareable(new FJsonObject());
+				JsonObject_SceneObject->SetStringField("instance_name", ActorRef->GetName());
+				JsonObject_SceneObject->SetObjectField("instance_color", FColorToJson(ActorMaterials[0].MaskMaterialColor));
+				JsonObject_SceneObject->SetStringField("class", "none");
+
+				JsonArray_SceneObjects.Add(MakeShareable(new FJsonValueObject(JsonObject_SceneObject)));
+			}
+		}
+		JsonObject->SetArrayField("SceneObjects", JsonArray_SceneObjects);
+
+		// Write JSON file
+		FString OutputString;
+		TSharedRef< TJsonWriter<> > Writer = TJsonWriterFactory<>::Create(&OutputString);
+		FJsonSerializer::Serialize(JsonObject.ToSharedRef(), Writer);
+		FFileHelper::SaveStringToFile(OutputString, *filename, FFileHelper::EEncodingOptions::AutoDetect, &IFileManager::Get(), EFileWrite::FILEWRITE_None);
+		printed = true;
+	}
+
+	return printed;
 }

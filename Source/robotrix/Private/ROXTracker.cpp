@@ -30,16 +30,19 @@ AROXTracker::AROXTracker() :
 	frame_already_loaded(false),
 	generate_rgb(true),
 	format_rgb(EROXRGBImageFormats::RIF_JPG95),
-	generate_depth(true),
-	generate_object_mask(true),
 	generate_normal(true),
+	generate_depth(true),
+	generate_object_mask(true),	
 	generate_depth_txt_cm(false),
 	generated_images_width(1920),
 	generated_images_height(1080),
+	retrieve_images_from_viewport(false),
+	SaveViewmodesInsideCameras(false),
 	frame_status_output_period(100),
 	fileHeaderWritten(false),
 	numFrame(0),
 	CurrentViewmode(EROXViewMode_First),
+	isMaskedMaterial(false),
 	CurrentViewTarget(0),
 	CurrentCamRebuildMode(0),
 	CurrentJsonFile(0),
@@ -98,33 +101,12 @@ AROXTracker::AROXTracker() :
 		NormalMat = (UMaterial*)matNormal.Object;
 	}
 
-	/*TextureRenderer_Lit = nullptr;
-	static ConstructorHelpers::FObjectFinder<UTextureRenderTarget2D> sceneCaptureLit(TEXT("/Game/Common/ViewModeMats/RT_SceneLit.RT_SceneLit"));
-	if (sceneCaptureLit.Succeeded())
+	MaskMat = nullptr;
+	static ConstructorHelpers::FObjectFinder<UMaterial> matMask(TEXT("/Game/Common/ViewModeMats/Mat_InstanceMaskColor.Mat_InstanceMaskColor"));
+	if (matMask.Succeeded())
 	{
-		TextureRenderer_Lit = (UTextureRenderTarget2D*)sceneCaptureLit.Object;
-	}*/
-
-	/*TextureRenderer_Depth = nullptr;
-	static ConstructorHelpers::FObjectFinder<UTextureRenderTarget2D> sceneCaptureDepth(TEXT("/Game/Common/ViewModeMats/RT_SceneDepth.RT_SceneDepth"));
-	if (sceneCaptureDepth.Succeeded())
-	{
-		TextureRenderer_Depth = (UTextureRenderTarget2D*)sceneCaptureDepth.Object;
-	}*/
-
-	/*TextureRenderer_Normal = nullptr;
-	static ConstructorHelpers::FObjectFinder<UTextureRenderTarget2D> sceneCaptureNormal(TEXT("/Game/Common/ViewModeMats/RT_SceneNormal.RT_SceneNormal"));
-	if (sceneCaptureNormal.Succeeded())
-	{
-		TextureRenderer_Normal = (UTextureRenderTarget2D*)sceneCaptureNormal.Object;
-	}*/
-
-	/*TextureRenderer_Mask = nullptr;
-	static ConstructorHelpers::FObjectFinder<UTextureRenderTarget2D> sceneCaptureMask(TEXT("/Game/Common/ViewModeMats/RT_SceneMask.RT_SceneMask"));
-	if (sceneCaptureMask.Succeeded())
-	{
-		TextureRenderer_Mask = (UTextureRenderTarget2D*)sceneCaptureMask.Object;
-	}*/
+		MaskMat = (UMaterial*)matMask.Object;
+	}
 
 	json_file_names.Add("scene");
 	start_frames.Add(0);
@@ -141,7 +123,6 @@ void AROXTracker::BeginPlay()
 	// PPX init
 	GameShowFlags = new FEngineShowFlags(GetWorld()->GetGameViewport()->EngineShowFlags);
 	FROXObjectPainter::Get().Reset(GetLevel());
-	FEngineShowFlags ShowFlags = GetWorld()->GetGameViewport()->EngineShowFlags;
 
 	//screenshot resolution
 	GScreenshotResolutionX = generated_images_width; // 1920  1280
@@ -155,7 +136,6 @@ void AROXTracker::BeginPlay()
 		if (pawn->GetController())
 		{
 			ControllerPawn = pawn;
-			ControllerPawn->isRecordMode();
 		}
 	}
 
@@ -166,9 +146,9 @@ void AROXTracker::BeginPlay()
 
 	EROXViewModeList.Empty();
 	if (generate_rgb) EROXViewModeList.Add(EROXViewMode::RVM_Lit);
+	if (generate_normal) EROXViewModeList.Add(EROXViewMode::RVM_Normal);
 	if (generate_depth || generate_depth_txt_cm) EROXViewModeList.Add(EROXViewMode::RVM_Depth);
 	if (generate_object_mask) EROXViewModeList.Add(EROXViewMode::RVM_ObjectMask);
-	if (generate_normal) EROXViewModeList.Add(EROXViewMode::RVM_Normal);
 
 	if (EROXViewModeList.Num() == 0) EROXViewModeList.Add(EROXViewMode::RVM_Lit);
 	EROXViewMode_First = EROXViewModeList[0];
@@ -184,62 +164,18 @@ void AROXTracker::BeginPlay()
 		screenshots_save_directory += "/";
 	}
 
+	// Match list legth of stereo camera baseline with camera list length
 	while (CameraActors.Num() > StereoCameraBaselines.Num())
 	{
 		StereoCameraBaselines.Add(0.0);
 	}
 
+	ViewBoundingBoxesInit();
+	PrepareMaterials();
+
+	// Playback mode
 	if (!bRecordMode)
-	{
-		// Lit
-		//UTextureRenderTarget2D* TextureRenderer_Lit2 = (class UTextureRenderTarget2D *)NewObject<class UTextureRenderTarget2D>(SceneCapture_Lit);
-		//TextureRenderer_Lit->SizeX = generated_images_width;
-		//TextureRenderer_Lit->SizeY = generated_images_height;
-		//TextureRenderer_Lit->RenderTargetFormat = ETextureRenderTargetFormat::RTF_RGBA8;
-		// Spawn SceneCapture2D for capture RGB data
-		/*FActorSpawnParameters ActorSpawnParams;
-		ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-		ActorSpawnParams.bDeferConstruction = true;*/
-		/*ActorSpawnParams.Name = FName("SceneCaptureLit");
-		SceneCapture_Lit = GetWorld()->SpawnActor<ASceneCapture2D>(ASceneCapture2D::StaticClass(), ActorSpawnParams);
-		SceneCapture_Lit->GetCaptureComponent2D()->TextureTarget = TextureRenderer_Lit;
-		SceneCapture_Lit->GetCaptureComponent2D()->CaptureSource = ESceneCaptureSource::SCS_FinalColorLDR;*/
-
-		//TextureRenderer_Depth->SizeX = generated_images_width;
-		//TextureRenderer_Depth->SizeY = generated_images_height;
-		// Spawn SceneCapture2D for capture Depth data
-		/*ActorSpawnParams.Name = FName("SceneCaptureDepth");
-		SceneCapture_Depth = GetWorld()->SpawnActor<ASceneCapture2D>(ASceneCapture2D::StaticClass(), ActorSpawnParams);
-		SceneCapture_Depth->GetCaptureComponent2D()->TextureTarget = TextureRenderer_Depth;
-		SceneCapture_Depth->GetCaptureComponent2D()->CaptureSource = ESceneCaptureSource::SCS_SceneDepth;*/
-
-		// Spawn SceneCapture2D for capture Normals data
-		/*FActorSpawnParameters ActorSpawnParams;
-		ActorSpawnParams.Name = FName("SceneCaptureNormal");
-		SceneCapture_Normal = GetWorld()->SpawnActor<ASceneCapture2D>(ASceneCapture2D::StaticClass(), ActorSpawnParams);
-		SceneCapture_Normal->GetCaptureComponent2D()->TextureTarget = TextureRenderer_Normal;
-		SceneCapture_Normal->GetCaptureComponent2D()->CaptureSource = ESceneCaptureSource::SCS_Normal;*/
-
-		// Spawn SceneCapture2D for capture Object Mask data
-		/*ActorSpawnParams.Name = FName("SceneCaptureMask");
-		SceneCapture_Mask = GetWorld()->SpawnActor<ASceneCapture2D>(ASceneCapture2D::StaticClass(), ActorSpawnParams);
-		SceneCapture_Mask->GetCaptureComponent2D()->TextureTarget = TextureRenderer_Mask;
-		SceneCapture_Mask->GetCaptureComponent2D()->CaptureSource = ESceneCaptureSource::SCS_FinalColorLDR;*/
-
-
-		//SceneCapture_Lit = SpawnSceneCapture("SceneCaptureLit");
-		//SetViewmodeSceneCapture(SceneCapture_Lit, EROXViewMode::RVM_Lit);
-
-		SceneCapture_Depth = SpawnSceneCapture("SceneCaptureDepth");
-		SetViewmodeSceneCapture(SceneCapture_Depth, EROXViewMode::RVM_Depth);
-
-		//SceneCapture_Normal = SpawnSceneCapture("SceneCaptureNormal");
-		//SetViewmodeSceneCapture(SceneCapture_Normal, EROXViewMode::RVM_Normal);
-
-		//SceneCapture_Mask = SpawnSceneCapture("SceneCaptureMask");
-		//SetViewmodeSceneCapture(SceneCapture_Mask, EROXViewMode::RVM_ObjectMask);
-
-		
+	{		
 		while (json_file_names.Num() > start_frames.Num())
 		{
 			start_frames.Add(0);
@@ -252,12 +188,16 @@ void AROXTracker::BeginPlay()
 
 		RebuildModeBegin();
 	}
-	else
-	{
-		PrintInstanceClassJson();
-	}
+}
 
-	ViewBoundingBoxesInit();
+void AROXTracker::BeginDestroy()
+{
+	if (isMaskedMaterial)
+	{
+		ToggleActorMaterials();
+		isMaskedMaterial = false;
+	}
+	Super::BeginDestroy();
 }
 
 // Called every frame
@@ -365,17 +305,6 @@ void AROXTracker::ViewBoundingBoxesMain()
 		Vertexes.Add(min + FVector(diff.X, diff.Y, 0.0f));
 		Vertexes.Add(min + FVector(diff.X, 0.0f, diff.Z));
 		Vertexes.Add(min + FVector(0.0f, diff.Y, diff.Z));
-
-		/*FVector boxCenter, boxSize;
-		ViewBoundingBoxes[i]->GetActorBounds(false, boxCenter, boxSize);
-		Vertexes.Add(boxCenter + FVector(boxSize.X, boxSize.Y, boxSize.Z));
-		Vertexes.Add(boxCenter + FVector(-boxSize.X, boxSize.Y, boxSize.Z));
-		Vertexes.Add(boxCenter + FVector(boxSize.X, -boxSize.Y, boxSize.Z));
-		Vertexes.Add(boxCenter + FVector(boxSize.X, boxSize.Y, -boxSize.Z));
-		Vertexes.Add(boxCenter + FVector(-boxSize.X, -boxSize.Y, boxSize.Z));
-		Vertexes.Add(boxCenter + FVector(boxSize.X, -boxSize.Y, -boxSize.Z));
-		Vertexes.Add(boxCenter + FVector(-boxSize.X, boxSize.Y, -boxSize.Z));
-		Vertexes.Add(boxCenter + FVector(-boxSize.X, -boxSize.Y, -boxSize.Z));*/
 
 		for (int j = 0; j < Vertexes.Num(); ++j)
 		{
@@ -567,40 +496,6 @@ void AROXTracker::WriteScene()
 	(new FAutoDeleteAsyncTask<FWriteStringTask>(tick_string_, absolute_file_path))->StartBackgroundTask();
 }
 
-void AROXTracker::PrintInstanceClassJson()
-{
-	FString instance_class_json;
-	FString instance_class_json_path = scene_save_directory + scene_folder + "/instance_class.json";
-	bool file_found = FFileHelper::LoadFileToString(instance_class_json, *instance_class_json_path);
-	if (!file_found)
-	{
-		TSharedPtr<FJsonObject> JsonObject = MakeShareable(new FJsonObject);
-
-		for (TObjectIterator<AStaticMeshActor> Itr; Itr; ++Itr)
-		{
-			FString fullName = Itr->GetFullName();
-			if (bStandaloneMode || fullName.Contains(Persistence_Level_Filter_Str))
-			{
-				JsonObject->SetStringField(Itr->GetName(), "none");
-			}
-		}
-
-		// Write JSON file
-		instance_class_json = "";
-		TSharedRef< TJsonWriter<> > Writer = TJsonWriterFactory<>::Create(&instance_class_json);
-		FJsonSerializer::Serialize(JsonObject.ToSharedRef(), Writer);
-		FFileHelper::SaveStringToFile(instance_class_json, *instance_class_json_path, FFileHelper::EEncodingOptions::AutoDetect, &IFileManager::Get(), EFileWrite::FILEWRITE_Append);
-
-		FString success_message("JSON file instance_class.json has been created successfully.");
-		UE_LOG(LogTemp, Warning, TEXT("%s"), *success_message);
-	}
-	else
-	{
-		FString error_message("JSON file instance_class.json already exists. Please, check and remove or rename that file in order to create a new one.");
-		UE_LOG(LogTemp, Warning, TEXT("%s"), *error_message);
-	}
-}
-
 void AROXTracker::GenerateSequenceJson()
 {
 	FString path = scene_save_directory + scene_folder;
@@ -637,6 +532,291 @@ FString AROXTracker::GetDateTimeString()
 //      \_/  |_|\___| \_/\_/ |_| |_| |_|\___/ \__,_|\___||___/
 //                                                            
 
+/*
+*/
+FColor AROXTracker::AssignColor(int idx_in)
+{
+	/* RGB values are assigned like this:
+	00 ->	255	0	0	| 10 -> 127	255	255	| 21 ->	255	127	127
+	01 ->	0	255	0	| 11 -> 0	127	0	| 21 ->	127	0	127
+	02 ->	0	0	255	| 12 -> 0	127	255	| 22 ->	127	255	127
+	03 ->	0	255	255	| 13 -> 255	127	0	| 23 ->	127	127	0
+	04 ->	255	0	255	| 14 ->	255	127	255	| 24 ->	127	127	255
+	05 ->	255	255	0	| 15 ->	0	0	127	| 25 ->	127	127	127
+	06 ->	255	255	255	| 16 ->	0	255	127	| 26 ->	63	0	0
+	07 ->	127	0	0	| 17 ->	255	0	127	| 27 ->	63	0	255
+	08 ->	127	0	255	| 18 ->	255	255	127	| 28 ->	63	0	127
+	09 ->	127	255	0	| 19 ->	0	127	127	| 29 ->	63	255	0
+	*/
+	const static uint8 ChannelValues[] = { 0, 255, 127, 63, 191, 31, 95, 159, 223, 15, 47, 79, 111, 143, 175, 207, 239, 7, 23, 39, 55, 71, 87, 103, 119, 135, 151, 167, 183, 199, 215, 231 };
+
+	FColor color = FColor(0, 0, 0, 255);
+	int idx = idx_in + 1; // Avoid black to be assigned
+
+	if (idx > 0 && idx < 32760) // Max colors that can be assigned combining the previous channel values
+	{
+		// VAL variable represents two things (related between them):
+		// - The position index on ChannelValues array of the last channel value.
+		// - The number of previous channel values
+		int val = FMath::FloorToInt(FMath::Pow(idx, (float)(1.0f / 3.0f)));
+		int prev_combinations = FMath::Pow(val, 3);
+
+		int combination_idx = idx - prev_combinations;
+		int sqr_val = val * val;
+		int n_comb_double = 3 * sqr_val;
+		int n_comb_unit = 3 * val;
+
+		uint8 color_arr[3] = {0, 0, 0};
+		if (combination_idx >= 0 && combination_idx < n_comb_double)
+		{
+			int partial_group_idx = combination_idx / sqr_val;
+			int partial_line_idx = combination_idx % sqr_val;			
+
+			int inner_group_idx = partial_line_idx / val;
+			int inner_line_idx = partial_line_idx % val;
+			int low = 0, high = 2;
+			if (partial_group_idx == 0) low = 1;
+			else if (partial_group_idx == 2) high = 1;
+
+			color_arr[partial_group_idx] = ChannelValues[val];
+			color_arr[low] = ChannelValues[inner_group_idx];
+			color_arr[high] = ChannelValues[inner_line_idx];
+		}
+		else if (combination_idx >= n_comb_double && combination_idx < (n_comb_unit + n_comb_double))
+		{
+			for (int i = 0; i < 3; ++i) color_arr[i] = ChannelValues[val];
+			int partial_comb_idx = combination_idx - n_comb_double;
+			int partial_group_idx = partial_comb_idx / val;
+			int partial_line_idx = partial_comb_idx % val;
+
+			color_arr[partial_group_idx] = ChannelValues[partial_line_idx];
+		}
+		else if (combination_idx == (n_comb_unit + n_comb_double))
+		{
+			for (int i = 0; i < 3; ++i) color_arr[i] = ChannelValues[val];
+		}
+
+		color.R = color_arr[0];
+		color.G = color_arr[1];
+		color.B = color_arr[2];
+		color.A = 255;
+	}
+	return color;
+}
+
+int AROXTracker::GetIdxFromColor(FColor color)
+{
+	int idx = 0;
+	const static uint8 ChannelValues[] = { 0, 255, 127, 63, 191, 31, 95, 159, 223, 15, 47, 79, 111, 143, 175, 207, 239, 7, 23, 39, 55, 71, 87, 103, 119, 135, 151, 167, 183, 199, 215, 231 };
+	const static uint8 ChannelValuesSize = 32;
+	uint8 color_input[3] = { color.R, color.G, color.B };
+	uint8 color_arr[3] = { 0, 0, 0 };
+
+	// Translation from colors to positions in ChannelValues array.
+	// Max of the three position values is stored.
+	// If max value is repeated, it is taken into account.
+	bool found = true;
+	int max = -1;
+	int max_pos = -1, max_pos2 = -1, not_max_pos = -1, not_max_pos2 = -1;
+	bool isMaxRepeatedTwice = false, isAllEqual = false;
+	for (int i = 0; i < 3 && found; ++i)
+	{
+		found = false;
+		for (int j = 0; j < ChannelValuesSize && !found; ++j)
+		{
+			if (color_input[i] == ChannelValues[j])
+			{
+				found = true;
+				color_arr[i] = j;
+				if (max == j)
+				{
+					if (!isMaxRepeatedTwice)
+					{
+						isMaxRepeatedTwice = true;
+						max_pos2 = i;
+
+						if (i == 1)	not_max_pos = 2;
+						else if (i == 2)
+						{
+							if(max_pos == 0) not_max_pos = 1;
+							else if(max_pos == 1) not_max_pos = 0;
+						}
+					}
+					else
+					{
+						isMaxRepeatedTwice = false;
+						isAllEqual = true;
+					}
+				}
+				else if (max < j)
+				{
+					max = j;
+					isMaxRepeatedTwice = false;
+					max_pos = i;
+					max_pos2 = -1;
+				}
+			}
+		}
+	}
+
+	if (found)
+	{
+		int prev_combinations = FMath::Pow(max, 3);
+
+		// Case 1 -> MAX - MAX - MAX (Ex: 127 127 127)
+		if (isAllEqual)
+		{
+			idx = FMath::Pow(max + 1, 3) - 1;
+		}
+		// Case 2 -> MAX - MAX - X (Ex: 127 127 255)
+		else if (isMaxRepeatedTwice)
+		{
+			int case3_combinations = FMath::Pow(max, 2) * 3;
+			idx = prev_combinations + case3_combinations + max * not_max_pos + color_arr[not_max_pos];
+		}
+		// Case 3 -> MAX - X - X (Ex: 127 0 255)
+		else
+		{
+			if (max_pos == 0) { not_max_pos = 1; not_max_pos2 = 2; }
+			else if (max_pos == 1) { not_max_pos = 0; not_max_pos2 = 2; }
+			else { not_max_pos = 0; not_max_pos2 = 1; }
+
+			int case3_prev_combinations = FMath::Pow(max, 2) * max_pos;
+			idx = prev_combinations + case3_prev_combinations + color_arr[not_max_pos] * max + color_arr[not_max_pos2];
+		}
+	}
+
+	return idx - 1;
+}
+
+void AROXTracker::PrepareMaterials()
+{
+	bool file_loaded = false;
+	TMap<FName, FROXSceneObject> SceneObjects;
+	if (json_file_names.Num() > 0)
+	{
+		FString sceneObject_json_filename = screenshots_save_directory + screenshots_folder + "/" + json_file_names[CurrentJsonFile] + "/sceneObject.json";
+		SceneObjects = ROXJsonParser::LoadSceneObjects(sceneObject_json_filename);
+		file_loaded = SceneObjects.Num() > 0;
+	}
+
+	TArray<int> used_idxs;
+	if (file_loaded)
+	{
+		TArray<FName> SceneObjects_name;
+		SceneObjects.GetKeys(SceneObjects_name);
+		for (FName SceneObject_name : SceneObjects_name)
+		{
+			FROXSceneObject* SceneObject_data = SceneObjects.Find(SceneObject_name);
+			int color_idx = GetIdxFromColor(SceneObject_data->instance_color);
+			if (color_idx > 0)
+			{
+				used_idxs.Add(color_idx);
+			}
+		}
+		used_idxs.Sort();
+	}
+
+	int comp_idx = 0;
+	int used_idxs_i = 0;
+	for (TObjectIterator<AActor> Itr; Itr; ++Itr)
+	{
+		TArray<UMeshComponent*> Components;
+		(*Itr)->GetComponents<UMeshComponent>(Components);
+		FString ActorFullName = (*Itr)->GetFullName();
+
+		if (Components.Num() > 0 && ActorFullName.Contains(Persistence_Level_Filter_Str) && !(*Itr)->IsA(ACameraActor::StaticClass()) && !(*Itr)->IsA(ASceneCapture2D::StaticClass()))
+		{
+			TArray<FROXMeshComponentMaterials> ComponentMaterials;
+			FColor ActorColor = FColor::Black;
+			if (file_loaded)
+			{
+				FROXSceneObject* SceneObject = SceneObjects.Find(FName(*(*Itr)->GetName()));
+				if (SceneObject != nullptr)
+				{
+					ActorColor = SceneObject->instance_color;
+				}
+				else
+				{
+					while (comp_idx == used_idxs[used_idxs_i])
+					{
+						comp_idx++;
+						if (used_idxs_i < (used_idxs.Num() - 1)) used_idxs_i++;
+					}
+					ActorColor = AssignColor(comp_idx);
+					++comp_idx;
+				}
+			}
+			else
+			{
+				ActorColor = AssignColor(comp_idx);
+				++comp_idx;
+			}
+
+			for (UMeshComponent* MeshComponent : Components)
+			{
+				FROXMeshComponentMaterials MaterialStruct;
+				MaterialStruct.MeshComponent = MeshComponent;
+				MaterialStruct.MaskMaterialColor = ActorColor;
+				//MaterialStruct.MaskMaterialLinearColor = FLinearColor::FromPow22Color(MaterialStruct.MaskMaterialColor);
+				MaterialStruct.MaskMaterialLinearColor = FLinearColor::FromSRGBColor(MaterialStruct.MaskMaterialColor);
+				MaterialStruct.MaskMaterial = UMaterialInstanceDynamic::Create(MaskMat, this);
+				MaterialStruct.MaskMaterial->SetVectorParameterValue("MatColor", MaterialStruct.MaskMaterialLinearColor);
+				
+				//UE_LOG(LogUnrealROX, Warning, TEXT("|-%s"), *(MeshComponent->GetName()));
+				/*FString msg = (*Itr)->GetName() + " " + FString::FromInt(comp_idx) + " " + FString::FromInt(GetIdxFromColor(MaterialStruct.MaskMaterialColor));
+				msg += ": R: " + FString::FromInt(MaterialStruct.MaskMaterialColor.R) + " G: " + FString::FromInt(MaterialStruct.MaskMaterialColor.G) + " B: " + FString::FromInt(MaterialStruct.MaskMaterialColor.B);
+				UE_LOG(LogUnrealROX, Warning, TEXT("%s"), *msg);*/
+
+				TArray <UMaterialInterface*> Materials = MeshComponent->GetMaterials();
+				for (UMaterialInterface* Material : Materials)
+				{
+					if (Material != NULL)
+					{
+						MaterialStruct.DefaultMaterials.Add(Material);
+						//UE_LOG(LogUnrealROX, Warning, TEXT("__|-%s"), *(Material->GetName()));
+					}
+				}
+
+				ComponentMaterials.Add(MaterialStruct);
+			}
+
+			MeshMaterials.Add(*Itr, ComponentMaterials);
+		}
+	}
+
+	if (json_file_names.Num() < 1)
+	{
+		FString sceneObject_json_filename = screenshots_save_directory + screenshots_folder + "/sceneObject.json";
+		ROXJsonParser::WriteSceneObjects(MeshMaterials, sceneObject_json_filename);
+	}
+}
+
+void AROXTracker::ToggleActorMaterials()
+{
+	isMaskedMaterial = !isMaskedMaterial;
+	for (const TPair<AActor*, TArray<FROXMeshComponentMaterials>>& pair : MeshMaterials)
+	{
+		AActor* actor = pair.Key;
+		const TArray<FROXMeshComponentMaterials> components = pair.Value;
+
+		for (FROXMeshComponentMaterials component : components)
+		{
+			for (int i = 0; i < component.DefaultMaterials.Num(); ++i)
+			{
+				if (isMaskedMaterial)
+				{
+					component.MeshComponent->SetMaterial(i, component.MaskMaterial);
+				}
+				else
+				{
+					component.MeshComponent->SetMaterial(i, component.DefaultMaterials[i]);
+				}
+			}
+		}
+	}
+}
+
 APostProcessVolume* AROXTracker::GetPostProcessVolume()
 {
 	UWorld* World = GetWorld();
@@ -672,8 +852,10 @@ void AROXTracker::VertexColor(FEngineShowFlags& ShowFlags)
 	ShowFlags.SetBSPTriangles(true);
 	ShowFlags.SetVertexColors(true);
 	ShowFlags.SetPostProcessing(false);
+	ShowFlags.SetPostProcessMaterial(false);
 	ShowFlags.SetHMDDistortion(false);
 	ShowFlags.SetTonemapper(false); // This won't take effect here
+	ShowFlags.DisableAdvancedFeatures();
 
 	GVertexColorViewMode = EVertexColorViewMode::Color;
 	SetVisibility(ShowFlags, PreviousShowFlags); // Store the visibility of the scene, such as folliage and landscape.
@@ -705,6 +887,10 @@ ASceneCapture2D* AROXTracker::SpawnSceneCapture(FString ActorName)
 	ASceneCapture2D* SceneCapture = GetWorld()->SpawnActor<ASceneCapture2D>(ASceneCapture2D::StaticClass(), ActorSpawnParams);
 	SceneCapture->GetCaptureComponent2D()->TextureTarget = NewObject<UTextureRenderTarget2D>();
 	SceneCapture->GetCaptureComponent2D()->TextureTarget->InitAutoFormat(generated_images_width, generated_images_height);
+	SceneCapture->GetCaptureComponent2D()->PostProcessSettings.bOverride_AutoExposureMinBrightness = true;
+	SceneCapture->GetCaptureComponent2D()->PostProcessSettings.bOverride_AutoExposureMaxBrightness = true;
+	SceneCapture->GetCaptureComponent2D()->PostProcessSettings.AutoExposureMinBrightness = 1.0f;
+	SceneCapture->GetCaptureComponent2D()->PostProcessSettings.AutoExposureMaxBrightness = 1.0f;
 	return SceneCapture;
 }
 
@@ -715,7 +901,8 @@ void AROXTracker::SetViewmodeSceneCapture(ASceneCapture2D* SceneCapture, EROXVie
 	case EROXViewMode::RVM_Lit:
 		SceneCapture->GetCaptureComponent2D()->CaptureSource = ESceneCaptureSource::SCS_FinalColorLDR;
 		SceneCapture->GetCaptureComponent2D()->TextureTarget->RenderTargetFormat = ETextureRenderTargetFormat::RTF_RGBA8;
-		SceneCapture->GetCaptureComponent2D()->TextureTarget->TargetGamma = 0;
+		SceneCapture->GetCaptureComponent2D()->TextureTarget->TargetGamma = 2.2;
+		SceneCapture->GetCaptureComponent2D()->PostProcessBlendWeight = 0;
 		break;
 	case EROXViewMode::RVM_Depth:
 		SceneCapture->GetCaptureComponent2D()->CaptureSource = ESceneCaptureSource::SCS_SceneDepth;
@@ -723,21 +910,18 @@ void AROXTracker::SetViewmodeSceneCapture(ASceneCapture2D* SceneCapture, EROXVie
 		SceneCapture->GetCaptureComponent2D()->TextureTarget->TargetGamma = 0;
 		break;
 	case EROXViewMode::RVM_ObjectMask:
-		SceneCapture->GetCaptureComponent2D()->CaptureSource = ESceneCaptureSource::SCS_FinalColorLDR;
+		SceneCapture->GetCaptureComponent2D()->CaptureSource = ESceneCaptureSource::SCS_BaseColor;
 		SceneCapture->GetCaptureComponent2D()->TextureTarget->RenderTargetFormat = ETextureRenderTargetFormat::RTF_RGBA8;
 		SceneCapture->GetCaptureComponent2D()->TextureTarget->TargetGamma = 1;
-		VertexColor(SceneCapture->GetCaptureComponent2D()->ShowFlags);
 		break;
 	case EROXViewMode::RVM_Normal:
 		SceneCapture->GetCaptureComponent2D()->CaptureSource = ESceneCaptureSource::SCS_FinalColorLDR;
 		SceneCapture->GetCaptureComponent2D()->TextureTarget->RenderTargetFormat = ETextureRenderTargetFormat::RTF_RGBA8;
-		SceneCapture->GetCaptureComponent2D()->TextureTarget->TargetGamma = 2.2;
-		//SceneCapture->GetCaptureComponent2D()->TextureTarget = TextureRenderer_Normal;
 		PostProcess(SceneCapture->GetCaptureComponent2D()->ShowFlags);
-		APostProcessVolume* PostProcessVolume = GetPostProcessVolume();
-		PostProcessVolume->Settings.WeightedBlendables.Array.Empty();
-		PostProcessVolume->Settings.AddBlendable(NormalMat, 1);
-		PostProcessVolume->BlendWeight = 1;
+		check(NormalMat);
+		SceneCapture->GetCaptureComponent2D()->PostProcessSettings.WeightedBlendables.Array.Empty();
+		SceneCapture->GetCaptureComponent2D()->PostProcessSettings.AddBlendable(NormalMat, 1);
+		SceneCapture->GetCaptureComponent2D()->PostProcessBlendWeight = 1;
 		break;
 	}
 	
@@ -746,22 +930,25 @@ void AROXTracker::SetViewmodeSceneCapture(ASceneCapture2D* SceneCapture, EROXVie
 
 ASceneCapture2D* AROXTracker::GetSceneCapture(EROXViewMode vm)
 {
-	ASceneCapture2D* SceneCapture(SceneCapture_Lit);
+	ASceneCapture2D* SceneCapture(DefaultSceneCapture);
 
-	switch (vm)
+	if (generate_rgb || generate_depth || generate_object_mask || generate_normal)
 	{
-	case EROXViewMode::RVM_Lit:
-		SceneCapture = SceneCapture_Lit;
-		break;
-	case EROXViewMode::RVM_Depth:
-		SceneCapture = SceneCapture_Depth;
-		break;
-	case EROXViewMode::RVM_ObjectMask:
-		SceneCapture = SceneCapture_Mask;
-		break;
-	case EROXViewMode::RVM_Normal:
-		SceneCapture = SceneCapture_Normal;
-		break;
+		switch (vm)
+		{
+		case EROXViewMode::RVM_Lit:
+			SceneCapture = SceneCapture_Lit[CurrentCamRebuildMode];
+			break;
+		case EROXViewMode::RVM_Depth:
+			SceneCapture = SceneCapture_Depth[CurrentCamRebuildMode];
+			break;
+		case EROXViewMode::RVM_ObjectMask:
+			SceneCapture = SceneCapture_Mask[CurrentCamRebuildMode];
+			break;
+		case EROXViewMode::RVM_Normal:
+			SceneCapture = SceneCapture_Normal[CurrentCamRebuildMode];
+			break;
+		}
 	}
 
 	return SceneCapture;
@@ -771,11 +958,7 @@ void AROXTracker::Lit()
 {
 	UWorld* World = GetWorld();
 	GetPostProcessVolume()->BlendWeight = 0;
-
-	if (GameShowFlags == nullptr)
-	{
-		return;
-	}
+	if (GameShowFlags == nullptr) return;
 	World->GetGameViewport()->EngineShowFlags = *GameShowFlags;
 
 	CurrentViewmode = EROXViewMode::RVM_Lit;
@@ -916,29 +1099,35 @@ void AROXTracker::TakeScreenshot(EROXViewMode vm)
 	}
 	else
 	{
-		TakeDepthScreenshotFolder(screenshot_filename);
+		TakeDepthScreenshotFolder(GetSceneCapture(vm), screenshot_filename);
 	}
 }
 
 void AROXTracker::TakeScreenshotFolder(EROXViewMode vm, FString CameraName)
 {
-	FString screenshot_filename = screenshots_save_directory + screenshots_folder + "/" + json_file_names[CurrentJsonFile] + "/" + ViewmodeString(vm) + "/" + CameraName + "/" + ROXJsonParser::IntToStringDigits(numFrame, 6);
-	if (vm == EROXViewMode::RVM_Depth)
+	FString screenshot_filename = screenshots_save_directory + screenshots_folder + "/" + json_file_names[CurrentJsonFile] + "/";
+	if (!SaveViewmodesInsideCameras)
 	{
-		TakeDepthScreenshotFolder(screenshot_filename);
+		screenshot_filename += ViewmodeString(vm) + "/" + CameraName + "/" + ROXJsonParser::IntToStringDigits(numFrame, 6);
 	}
-	/*else if (vm == EROXViewMode::RVM_Lit || vm == EROXViewMode::RVM_Normal)
-	{
-		TakeRGBScreenshotFolder(screenshot_filename, vm);
-	}*/
-	/*else if (vm == EROXViewMode::RVM_ObjectMask)
-	{
-		TakeMaskScreenshotFolder(screenshot_filename, vm);
-	}*/
 	else
 	{
-		HighResSshot(GetWorld()->GetGameViewport(), screenshot_filename, vm);
-		//TakeRenderTargetScreenshotFolder(screenshot_filename, vm);
+		screenshot_filename += CameraName + "/" + ViewmodeString(vm) + "/" + ROXJsonParser::IntToStringDigits(numFrame, 6);
+	}
+	if (vm == EROXViewMode::RVM_Depth)
+	{
+		TakeDepthScreenshotFolder(GetSceneCapture(vm), screenshot_filename);
+	}
+	else
+	{
+		if (retrieve_images_from_viewport)
+		{
+			HighResSshot(GetWorld()->GetGameViewport(), screenshot_filename, vm);
+		}
+		else
+		{
+			TakeRenderTargetScreenshotFolder(GetSceneCapture(vm), screenshot_filename, vm);
+		}
 	}
 }
 
@@ -995,15 +1184,14 @@ void AROXTracker::HighResSshot(UGameViewportClient* ViewportClient, const FStrin
 	});
 }
 
-void AROXTracker::TakeDepthScreenshotFolder(const FString& FullFilename)
+void AROXTracker::TakeDepthScreenshotFolder(ASceneCapture2D* SceneCapture, const FString& FullFilename)
 {
-	//SceneCapture_depth;
-	int32 Width = SceneCapture_Depth->GetCaptureComponent2D()->TextureTarget->SizeX;
-	int32 Height = SceneCapture_Depth->GetCaptureComponent2D()->TextureTarget->SizeY;
+	int32 Width = SceneCapture->GetCaptureComponent2D()->TextureTarget->SizeX;
+	int32 Height = SceneCapture->GetCaptureComponent2D()->TextureTarget->SizeY;
 	TArray<FFloat16Color> ImageData;
 	FTextureRenderTargetResource* RenderTargetResource;
 	ImageData.AddUninitialized(Width * Height);
-	RenderTargetResource = SceneCapture_Depth->GetCaptureComponent2D()->TextureTarget->GameThread_GetRenderTargetResource();
+	RenderTargetResource = SceneCapture->GetCaptureComponent2D()->TextureTarget->GameThread_GetRenderTargetResource();
 	RenderTargetResource->ReadFloat16Pixels(ImageData);
 
 	if (ImageData.Num() != 0 && ImageData.Num() == Width * Height)
@@ -1048,96 +1236,32 @@ void AROXTracker::TakeDepthScreenshotFolder(const FString& FullFilename)
 	}
 }
 
-void AROXTracker::TakeRGBScreenshotFolder(const FString& FullFilename, const EROXViewMode viewmode)
+void AROXTracker::TakeRenderTargetScreenshotFolder(ASceneCapture2D* SceneCapture, const FString& FullFilename, const EROXViewMode viewmode)
 {
-	//SceneCapture_depth;
-	//int32 Width = TextureRenderer_Lit->SizeX, Height = TextureRenderer_Lit->SizeY;
-	int32 Width = generated_images_width, Height = generated_images_height;
-	TArray<FColor> ImageData;
-	//FTextureRenderTargetResource* RenderTargetResource;
-	ImageData.AddUninitialized(Width * Height);
-	//RenderTargetResource = TextureRenderer_Lit->GameThread_GetRenderTargetResource();
-	//RenderTargetResource->ReadPixels(ImageData);
-
-	if (ImageData.Num() != 0 && ImageData.Num() == Width * Height)
-	{
-		if (generate_rgb)
-		{
-			TArray<uint8> ImgData;
-			FString FullFilenameExtension;
-
-			if (viewmode == EROXViewMode::RVM_Lit && (format_rgb == EROXRGBImageFormats::RVM_JPG80 || format_rgb == EROXRGBImageFormats::RIF_JPG95))
-			{
-				TArray<uint8> RGBData8Bit;
-				for (FColor Color : ImageData)
-				{
-					Color.A = 255; // Make sure that all alpha values are opaque.
-					RGBData8Bit.Add(Color.R);
-					RGBData8Bit.Add(Color.G);
-					RGBData8Bit.Add(Color.B);
-					RGBData8Bit.Add(0);
-				}
-
-				static IImageWrapperModule& ImageWrapperModule = FModuleManager::LoadModuleChecked<IImageWrapperModule>(FName("ImageWrapper"));
-				static TSharedPtr<IImageWrapper> ImageWrapper = ImageWrapperModule.CreateImageWrapper(EImageFormat::JPEG);
-				//ImageWrapper->SetRaw(ImageData.GetData(), ImageData.GetAllocatedSize(), Width, Height, ERGBFormat::BGRA, 8);
-				ImageWrapper->SetRaw(RGBData8Bit.GetData(), RGBData8Bit.GetAllocatedSize(), Width, Height, ERGBFormat::RGBA, 8);
-				ImgData = ImageWrapper->GetCompressed(format_rgb == EROXRGBImageFormats::RIF_JPG95 ? 95 : 80);
-				FullFilenameExtension = FullFilename + ".jpg";
-			}
-			else
-			{
-				FImageUtils::CompressImageArray(Width, Height, ImageData, ImgData);
-				FullFilenameExtension = FullFilename + ".png";
-			}
-
-			(new FAutoDeleteAsyncTask<FScreenshotTask>(ImgData, FullFilenameExtension))->StartBackgroundTask();
-		}
-	}
-}
-
-void AROXTracker::TakeMaskScreenshotFolder(const FString& FullFilename, const EROXViewMode viewmode)
-{
-	//SceneCapture_depth;
-	//int32 Width = TextureRenderer_Lit->SizeX, Height = TextureRenderer_Lit->SizeY;
-	int32 Width = generated_images_width, Height = generated_images_height;
-	TArray<FColor> ImageData;
-	ImageData.AddUninitialized(Width * Height);
-	FTextureRenderTargetResource* RenderTargetResource;	
-	RenderTargetResource = SceneCapture_Mask->GetCaptureComponent2D()->TextureTarget->GameThread_GetRenderTargetResource();
-	RenderTargetResource->ReadPixels(ImageData);
-
-	if (ImageData.Num() != 0 && ImageData.Num() == Width * Height)
-	{
-		if (generate_object_mask)
-		{
-			TArray<uint8> ImgData;
-			FString FullFilenameExtension;
-
-			FImageUtils::CompressImageArray(Width, Height, ImageData, ImgData);
-			FullFilenameExtension = FullFilename + ".png";
-
-			(new FAutoDeleteAsyncTask<FScreenshotTask>(ImgData, FullFilenameExtension))->StartBackgroundTask();
-		}
-	}
-}
-
-void AROXTracker::TakeRenderTargetScreenshotFolder(const FString& FullFilename, const EROXViewMode viewmode)
-{
-	ASceneCapture2D* SceneCapture = GetSceneCapture(viewmode);
 	int32 Width = SceneCapture->GetCaptureComponent2D()->TextureTarget->SizeX;
 	int32 Height = SceneCapture->GetCaptureComponent2D()->TextureTarget->SizeY;	
 	FTextureRenderTargetResource* RenderTargetResource;
 	RenderTargetResource = SceneCapture->GetCaptureComponent2D()->TextureTarget->GameThread_GetRenderTargetResource();
 
+	TArray<FLinearColor> ImageDataLC;
+	ImageDataLC.AddUninitialized(Width * Height);
+	RenderTargetResource->ReadLinearColorPixels(ImageDataLC);
+
 	TArray<FColor> ImageData;
 	ImageData.AddUninitialized(Width * Height);
-	RenderTargetResource->ReadPixels(ImageData);
 
 	if (ImageData.Num() != 0 && ImageData.Num() == Width * Height)
 	{
 		for (int i = 0; i < ImageData.Num(); ++i)
 		{
+			if (viewmode == EROXViewMode::RVM_ObjectMask)
+			{
+				ImageData[i] = ImageDataLC[i].ToFColor(true);
+			}
+			else
+			{
+				ImageData[i] = ImageDataLC[i].ToFColor(false);
+			}
 			ImageData[i].A = 255;
 		}
 
@@ -1166,6 +1290,58 @@ void AROXTracker::TakeRenderTargetScreenshotFolder(const FString& FullFilename, 
 
 /**********************************************************/
 
+void AROXTracker::SpawnCamerasPlayback(FROXCameraConfig camConfig, int stereo)
+{
+	FString stereo_str("");
+	if (stereo > 0) stereo_str = "_Right";
+	else if (stereo < 0) stereo_str = "_Left";
+
+	if (stereo == 0)	StereoCameraBaselines.Add(camConfig.StereoBaseline);
+	else				StereoCameraBaselines.Add(-1);
+
+	FActorSpawnParameters ActorSpawnParams;
+	ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	ActorSpawnParams.bDeferConstruction = true;
+	ActorSpawnParams.Name = FName(*(camConfig.CameraName + stereo_str + "_PLAYBACK"));
+	ACameraActor* cam_spawn = GetWorld()->SpawnActor<ACameraActor>(ACameraActor::StaticClass(), ActorSpawnParams);
+	cam_spawn->SetActorLabel(camConfig.CameraName + stereo_str);
+	cam_spawn->GetCameraComponent()->SetFieldOfView(camConfig.FieldOfView);
+	cam_spawn->GetCameraComponent()->bConstrainAspectRatio = false;
+	cam_spawn->GetCameraComponent()->PostProcessSettings.bOverride_AutoExposureMinBrightness = true;
+	cam_spawn->GetCameraComponent()->PostProcessSettings.bOverride_AutoExposureMaxBrightness = true;
+	cam_spawn->GetCameraComponent()->PostProcessSettings.AutoExposureMinBrightness = 1.0f;
+	cam_spawn->GetCameraComponent()->PostProcessSettings.AutoExposureMaxBrightness = 1.0f;
+	CameraActors.Add(cam_spawn);
+
+	if (generate_rgb)
+	{
+		ASceneCapture2D* SceneCapture_Lit_Aux = SpawnSceneCapture("SceneCaptureLit_" + camConfig.CameraName + stereo_str);
+		SetViewmodeSceneCapture(SceneCapture_Lit_Aux, EROXViewMode::RVM_Lit);
+		SceneCapture_Lit.Add(SceneCapture_Lit_Aux);
+	}
+	
+	if (generate_depth)
+	{
+		ASceneCapture2D* SceneCapture_Depth_Aux = SpawnSceneCapture("SceneCaptureDepth_" + camConfig.CameraName + stereo_str);
+		SetViewmodeSceneCapture(SceneCapture_Depth_Aux, EROXViewMode::RVM_Depth);
+		SceneCapture_Depth.Add(SceneCapture_Depth_Aux);
+	}
+	
+	if (generate_normal)
+	{
+		ASceneCapture2D* SceneCapture_Normal_Aux = SpawnSceneCapture("SceneCaptureNormal_" + camConfig.CameraName + stereo_str);
+		SetViewmodeSceneCapture(SceneCapture_Normal_Aux, EROXViewMode::RVM_Normal);
+		SceneCapture_Normal.Add(SceneCapture_Normal_Aux);
+	}
+
+	if (generate_object_mask)
+	{
+		ASceneCapture2D* SceneCapture_Mask_Aux = SpawnSceneCapture("SceneCaptureMask_" + camConfig.CameraName + stereo_str);
+		SetViewmodeSceneCapture(SceneCapture_Mask_Aux, EROXViewMode::RVM_ObjectMask);
+		SceneCapture_Mask.Add(SceneCapture_Mask_Aux);
+	}
+}
+
 void AROXTracker::CacheStaticMeshActors()
 {
 	// StaticMeshActor dump
@@ -1188,39 +1364,32 @@ void AROXTracker::CacheSceneActors(const TArray<FROXPawnInfo> &PawnsInfo, const 
 	// Cameras dump
 	CameraActors.Empty();
 	StereoCameraBaselines.Empty();
-	for (TActorIterator <ACameraActor> ActorItr(GetWorld()); ActorItr; ++ActorItr)
+	SceneCapture_Depth.Empty();
+	SceneCapture_Lit.Empty();
+	SceneCapture_Normal.Empty();
+	SceneCapture_Mask.Empty();
+
+	DefaultSceneCapture = SpawnSceneCapture("DefaultSceneCapture");
+	SetViewmodeSceneCapture(DefaultSceneCapture, EROXViewMode::RVM_Lit);
+
+	/*for (TActorIterator <ACameraActor> ActorItr(GetWorld()); ActorItr; ++ActorItr)
 	{
 		ActorItr->DetachFromActor(FDetachmentTransformRules(EDetachmentRule::KeepWorld, true));
 		ActorItr->Destroy();
-	}
-	FActorSpawnParameters ActorSpawnParams;
-	ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-	ActorSpawnParams.bDeferConstruction = true;
-	for (FROXCameraConfig camConfig : CameraConfigs)
-	{		
-		ActorSpawnParams.Name = FName(*(camConfig.CameraName + "_REBUILD"));
-		ACameraActor* cam_spawn = GetWorld()->SpawnActor<ACameraActor>(ACameraActor::StaticClass(), ActorSpawnParams);
-		cam_spawn->SetActorLabel(camConfig.CameraName);
-		cam_spawn->GetCameraComponent()->SetFieldOfView(camConfig.FieldOfView);
-		CameraActors.Add(cam_spawn);
-		StereoCameraBaselines.Add(camConfig.StereoBaseline);
-
-		// Stereo
-		if (camConfig.StereoBaseline > 0.0)
+	}*/
+	bool check_camera = (json_file_names.Num() == cameras_to_rebuild.Num()) && (cameras_to_rebuild[CurrentJsonFile].Len() == CameraConfigs.Num());
+	for (int i = 0; i < CameraConfigs.Num(); ++i)
+	{
+		if (!check_camera || cameras_to_rebuild[CurrentJsonFile][i] == '1')
 		{
-			ActorSpawnParams.Name = FName(*(camConfig.CameraName + "_Left_REBUILD"));
-			ACameraActor* stereo_left = GetWorld()->SpawnActor<ACameraActor>(ACameraActor::StaticClass(), ActorSpawnParams);
-			stereo_left->SetActorLabel(camConfig.CameraName + "_Left");
-			stereo_left->GetCameraComponent()->SetFieldOfView(camConfig.FieldOfView);
-			CameraActors.Add(stereo_left);
-			StereoCameraBaselines.Add(-1);
+			SpawnCamerasPlayback(CameraConfigs[i], 0);
 
-			ActorSpawnParams.Name = FName(*(camConfig.CameraName + "_Right_REBUILD"));
-			ACameraActor* stereo_right = GetWorld()->SpawnActor<ACameraActor>(ACameraActor::StaticClass(), ActorSpawnParams);
-			stereo_right->SetActorLabel(camConfig.CameraName + "_Right");
-			stereo_right->GetCameraComponent()->SetFieldOfView(camConfig.FieldOfView);
-			CameraActors.Add(stereo_right);
-			StereoCameraBaselines.Add(-1);
+			// Stereo
+			if (CameraConfigs[i].StereoBaseline > 0.0)
+			{
+				SpawnCamerasPlayback(CameraConfigs[i], -1);
+				SpawnCamerasPlayback(CameraConfigs[i], 1);
+			}
 		}
 	}
 
@@ -1239,6 +1408,34 @@ void AROXTracker::CacheSceneActors(const TArray<FROXPawnInfo> &PawnsInfo, const 
 				}
 			}
 		}
+	}
+}
+
+void AROXTracker::SetCamerasAndRenderTargetsLocationAndRotation(int index, FVector NewLocation, FRotator NewRotation)
+{
+	if (retrieve_images_from_viewport)
+	{
+		CameraActors[index]->SetActorLocationAndRotation(NewLocation, NewRotation);
+	}
+	else
+	{
+		if (generate_rgb)
+		{
+			SceneCapture_Lit[index]->SetActorLocationAndRotation(NewLocation, NewRotation);
+		}
+		if (generate_object_mask)
+		{
+			SceneCapture_Mask[index]->SetActorLocationAndRotation(NewLocation, NewRotation);
+		}
+		if (generate_normal)
+		{
+			SceneCapture_Normal[index]->SetActorLocationAndRotation(NewLocation, NewRotation);
+		}		
+	}
+
+	if (generate_depth)
+	{
+		SceneCapture_Depth[index]->SetActorLocationAndRotation(NewLocation, NewRotation);
 	}
 }
 
@@ -1283,10 +1480,6 @@ void AROXTracker::ChangeViewmodeDelegate(EROXViewMode vm)
 			}
 			ControllerPawn->ChangeViewTarget(CameraActors[CurrentCamRebuildMode]);
 		}
-		SceneCapture_Depth->SetActorLocationAndRotation(CameraActors[CurrentCamRebuildMode]->GetActorLocation(), CameraActors[CurrentCamRebuildMode]->GetActorRotation());
-		//SceneCapture_Lit->SetActorLocationAndRotation(CameraActors[CurrentCamRebuildMode]->GetActorLocation(), CameraActors[CurrentCamRebuildMode]->GetActorRotation());
-		//SceneCapture_Normal->SetActorLocationAndRotation(CameraActors[CurrentCamRebuildMode]->GetActorLocation(), CameraActors[CurrentCamRebuildMode]->GetActorRotation());
-		//SceneCapture_Mask->SetActorLocationAndRotation(CameraActors[CurrentCamRebuildMode]->GetActorLocation(), CameraActors[CurrentCamRebuildMode]->GetActorRotation());
 	}
 	ChangeViewmode(vm);
 
@@ -1297,9 +1490,12 @@ void AROXTracker::ChangeViewmodeDelegate(EROXViewMode vm)
 void AROXTracker::TakeScreenshotDelegate(EROXViewMode vm)
 {
 	FTimerHandle TimerHandle;
-	TakeScreenshotFolder(vm, CameraActors[CurrentCamRebuildMode]->GetActorLabel());
+	if (StereoCameraBaselines[CurrentCamRebuildMode] <= 0)
+	{
+		TakeScreenshotFolder(vm, CameraActors[CurrentCamRebuildMode]->GetActorLabel());
+	}
 
-	if (vm == EROXViewMode_Last)
+	if (vm == EROXViewMode_Last || StereoCameraBaselines[CurrentCamRebuildMode] > 0)
 	{
 		++CurrentCamRebuildMode;
 		if (CurrentCamRebuildMode < CameraActors.Num())
@@ -1319,6 +1515,50 @@ void AROXTracker::TakeScreenshotDelegate(EROXViewMode vm)
 	}
 }
 
+void AROXTracker::CheckMaterialsAndTakeScreenshotRTDelegate(EROXViewMode vm)
+{
+	if (!retrieve_images_from_viewport &&
+		((vm == EROXViewMode::RVM_ObjectMask && !isMaskedMaterial) ||
+		((vm == EROXViewMode::RVM_Lit || vm == EROXViewMode::RVM_Normal) && isMaskedMaterial)))
+	{
+		ToggleActorMaterials();
+		FTimerHandle TimerHandle;
+		GetWorld()->GetTimerManager().SetTimer(TimerHandle, FTimerDelegate::CreateUObject(this, &AROXTracker::TakeScreenshotsRenderTargetDelegate, vm), change_viewmode_delay, false);
+	}
+	else
+	{
+		TakeScreenshotsRenderTargetDelegate(vm);
+	}
+}
+
+void AROXTracker::TakeScreenshotsRenderTargetDelegate(EROXViewMode vm)
+{
+	for (int i = 0; i < CameraActors.Num(); ++i)
+	{
+		CurrentCamRebuildMode = i;
+		if (StereoCameraBaselines[i] <= 0)
+		{
+			for (AROXBasePawn* p : Pawns)
+			{
+				p->CheckFirstPersonCamera(CameraActors[i]);
+			}
+
+			TakeScreenshotFolder(vm, CameraActors[i]->GetActorLabel());
+		}
+	}
+
+	
+	if (vm != EROXViewMode_Last)
+	{
+		CheckMaterialsAndTakeScreenshotRTDelegate(NextViewmode(vm));
+	}
+	else
+	{
+		FTimerHandle TimerHandle;
+		GetWorld()->GetTimerManager().SetTimer(TimerHandle, FTimerDelegate::CreateUObject(this, &AROXTracker::RebuildModeMain), take_screenshot_delay, false);
+	}
+}
+
 void AROXTracker::RebuildModeBegin()
 {
 	if (CurrentJsonFile < start_frames.Num())
@@ -1335,26 +1575,34 @@ void AROXTracker::RebuildModeBegin()
 
 	// Print sceneObject JSON 
 	FString sceneObject_json_filename = screenshots_save_directory + screenshots_folder + "/" + json_file_names[CurrentJsonFile] + "/sceneObject.json";
-	FROXObjectPainter::Get().PrintToJson(sceneObject_json_filename);
+
+	if (retrieve_images_from_viewport)
+	{
+		FROXObjectPainter::Get().PrintToJson(sceneObject_json_filename);
+	}
+	else
+	{
+		ROXJsonParser::WriteSceneObjects(MeshMaterials, sceneObject_json_filename);
+	}
 
 	JsonParser = new ROXJsonParser();
 	JsonParser->LoadFile(scene_save_directory + scene_folder + "/" + json_file_names[CurrentJsonFile] + ".json");
 
-	CacheSceneActors(JsonParser->GetPawnsInfo(), JsonParser->GetCameraConfigs());
-	DisableGravity();
-
-	// Init viewtarget
-	if (CameraActors.Num() > 0)
-	{
-		for (AROXBasePawn* p : Pawns)
-		{
-			p->CheckFirstPersonCamera(CameraActors[CurrentCamRebuildMode]);
-		}
-		ControllerPawn->ChangeViewTarget(CameraActors[CurrentCamRebuildMode]);
-	}
-
 	if (JsonParser->GetNumFrames() > 0)
 	{
+		CacheSceneActors(JsonParser->GetPawnsInfo(), JsonParser->GetCameraConfigs());
+		DisableGravity();
+
+		// Init viewtarget
+		if (CameraActors.Num() > 0)
+		{
+			for (AROXBasePawn* p : Pawns)
+			{
+				p->CheckFirstPersonCamera(CameraActors[CurrentCamRebuildMode]);
+			}
+			ControllerPawn->ChangeViewTarget(CameraActors[CurrentCamRebuildMode]);
+		}
+	
 		CurrentCamRebuildMode = 0;
 		FTimerHandle TimerHandle;
 		GetWorld()->GetTimerManager().SetTimer(TimerHandle, FTimerDelegate::CreateUObject(this, &AROXTracker::RebuildModeMain), initial_delay, false);
@@ -1365,6 +1613,14 @@ void AROXTracker::RebuildModeMain()
 {
 	if (numFrame < JsonParser->GetNumFrames())
 	{
+		// Set materials for the first viewmode
+		if (!retrieve_images_from_viewport &&
+			((EROXViewMode_First == EROXViewMode::RVM_ObjectMask && !isMaskedMaterial) ||
+			((EROXViewMode_First == EROXViewMode::RVM_Lit || EROXViewMode_First == EROXViewMode::RVM_Normal) && isMaskedMaterial)))
+		{
+			ToggleActorMaterials();
+		}
+
 		int64 currentTime = FDateTime::Now().ToUnixTimestamp();
 		PrintStatusToLog(start_frames[CurrentJsonFile], JsonReadStartTime, LastFrameTime, numFrame, currentTime, JsonParser->GetNumFrames());
 		LastFrameTime = currentTime;
@@ -1456,20 +1712,20 @@ void AROXTracker::RebuildModeMain_Camera()
 		FROXActorState* CamState = currentFrame.Cameras.Find(CameraActors[i]->GetActorLabel());
 		if (CamState != nullptr)
 		{
-			CameraActors[i]->SetActorLocationAndRotation(CamState->Position, CamState->Rotation);
+			SetCamerasAndRenderTargetsLocationAndRotation(i, CamState->Position, CamState->Rotation);
 
 			// Stereo
-			if (StereoCameraBaselines[i] > 0.0f)
+			if (StereoCameraBaselines[i] > 0.0f && i + 2 < CameraActors.Num())
 			{
 				FRotator camera_rotation = FRotator(CamState->Rotation);
 
 				FVector stereo_left_vector(0.0f, (-1)*StereoCameraBaselines[i]*0.5f, 0.0f);
 				FVector stereo_left_vector_rot = camera_rotation.RotateVector(stereo_left_vector);
-				CameraActors[i + 1]->SetActorLocationAndRotation(CamState->Position + stereo_left_vector_rot, CamState->Rotation);
+				SetCamerasAndRenderTargetsLocationAndRotation(i + 1, CamState->Position + stereo_left_vector_rot, CamState->Rotation);
 
 				FVector stereo_right_vector(0.0f, StereoCameraBaselines[i]*0.5f, 0.0f);
 				FVector stereo_right_vector_rot = camera_rotation.RotateVector(stereo_right_vector);
-				CameraActors[i + 2]->SetActorLocationAndRotation(CamState->Position + stereo_right_vector_rot, CamState->Rotation);
+				SetCamerasAndRenderTargetsLocationAndRotation(i + 2, CamState->Position + stereo_right_vector_rot, CamState->Rotation);
 
 				i = i + 2;
 			}
@@ -1480,7 +1736,18 @@ void AROXTracker::RebuildModeMain_Camera()
 	CurrentCamRebuildMode = 0;
 	FTimerHandle TimerHandle;
 
-	GetWorld()->GetTimerManager().SetTimer(TimerHandle, FTimerDelegate::CreateUObject(this, &AROXTracker::ChangeViewmodeDelegate, EROXViewMode_First), first_viewmode_of_frame_delay, false);
+	if (retrieve_images_from_viewport)
+	{
+		GetWorld()->GetTimerManager().SetTimer(TimerHandle, FTimerDelegate::CreateUObject(this, &AROXTracker::ChangeViewmodeDelegate, EROXViewMode_First), first_viewmode_of_frame_delay, false);
+	}
+	else
+	{
+		if (RebuildView)
+		{
+			ControllerPawn->ChangeViewTarget(RebuildView);
+		}
+		GetWorld()->GetTimerManager().SetTimer(TimerHandle, FTimerDelegate::CreateUObject(this, &AROXTracker::CheckMaterialsAndTakeScreenshotRTDelegate, EROXViewMode_First), first_viewmode_of_frame_delay, false);
+	}
 }
 
 FString SecondsToString(int timeSec)
@@ -1510,7 +1777,7 @@ void AROXTracker::PrintStatusToLog(int startFrame, int64 startTimeSec, int64 las
 			status_msg += " - Estimated Remaining Time: " + SecondsToString(remainingTimeSec) + " - Last Frame Time: " + FString::FromInt(lastFrameElapsedTimeSec) + "sec - Total Elapsed Time: " + SecondsToString(elapsedTimeSec);
 		}
 
-		UE_LOG(LogTemp, Warning, TEXT("%s"), *status_msg);
+		UE_LOG(LogUnrealROX, Warning, TEXT("%s"), *status_msg);
 	}
 }
 
@@ -1519,7 +1786,7 @@ void AROXTracker::SetRecordSettings()
 	for (TActorIterator <ALight> ActorItr(GetWorld()); ActorItr; ++ActorItr)
 	{
 		//FString fullName = Itr->GetFullName();
-		//UE_LOG(LogTemp, Warning, TEXT("%s"), *fullName);
+		//UE_LOG(LogUnrealROX, Warning, TEXT("%s"), *fullName);
 		ActorItr->Destroy();
 	}
 }

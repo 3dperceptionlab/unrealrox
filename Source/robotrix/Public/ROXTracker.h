@@ -24,15 +24,15 @@ UENUM(BlueprintType)
 enum class EROXViewMode : uint8
 {
 	RVM_Lit			UMETA(DisplayName = "Lit"),
+	RVM_Normal		UMETA(DisplayName = "Normal"),
 	RVM_Depth		UMETA(DisplayName = "Depth"),
-	RVM_ObjectMask	UMETA(DisplayName = "Object Mask"),
-	RVM_Normal		UMETA(DisplayName = "Normal")
+	RVM_ObjectMask	UMETA(DisplayName = "Object Mask")
 };
 // Contains the types of images that will be generated for a concrete execution.
 static TArray<EROXViewMode> EROXViewModeList;
 // First and last elements from EROXViewModeList (updated in runtime)
 static EROXViewMode EROXViewMode_First = EROXViewMode::RVM_Lit;
-static EROXViewMode EROXViewMode_Last = EROXViewMode::RVM_Normal;
+static EROXViewMode EROXViewMode_Last = EROXViewMode::RVM_ObjectMask;
 
 
 // Lists the different formats available for RGB images.
@@ -97,6 +97,8 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
+	virtual void BeginDestroy() override;
+
 	/* Name prefix for the raw TXT scene files */
 	UPROPERTY(EditAnywhere, Category = Recording, meta = (EditCondition = "bRecordMode"))
 	FString scene_file_name_prefix;
@@ -130,15 +132,15 @@ protected:
 	/* Format for RGB images (PNG ~3MB, JPG 95% ~800KB, JPG 80% ~120KB) */
 	UPROPERTY(EditAnywhere, Category = Playback, meta = (EditCondition = "generate_rgb"))
 	EROXRGBImageFormats format_rgb;
+	/* If checked, Normal images (PNG RGB 8bit) will be generated for each frame of rebuilt sequences */
+	UPROPERTY(EditAnywhere, Category = Playback, meta = (EditCondition = "!bRecordMode"))
+	bool generate_normal;
 	/* If checked, Depth images (PNG Gray 16bit) will be generated for each frame of rebuilt sequences */
 	UPROPERTY(EditAnywhere, Category = Playback, meta = (EditCondition = "!bRecordMode"))
 	bool generate_depth;
 	/* If checked, Object Mask images (PNG RGB 8bit) will be generated for each frame of rebuilt sequences */
 	UPROPERTY(EditAnywhere, Category = Playback, meta = (EditCondition = "!bRecordMode"))
 	bool generate_object_mask;
-	/* If checked, Normal images (PNG RGB 8bit) will be generated for each frame of rebuilt sequences */
-	UPROPERTY(EditAnywhere, Category = Playback, meta = (EditCondition = "!bRecordMode"))
-	bool generate_normal;
 	/* If checked, a TXT file with depth in cm for each pixel will be printed (WARNING: large size ~2MB per file) */
 	UPROPERTY(EditAnywhere, Category = Playback, meta = (EditCondition = "!bRecordMode"))
 	bool generate_depth_txt_cm;
@@ -157,6 +159,18 @@ protected:
 	UPROPERTY(EditAnywhere, Category = Playback, meta = (EditCondition = "!bRecordMode"))
 	int generated_images_height;
 
+	/* If checked, rgb, normal and mask images will be taken from viewport, instead of using RenderTargets. */
+	UPROPERTY(EditAnywhere, Category = Playback, AdvancedDisplay, meta = (EditCondition = "!bRecordMode"))
+	bool retrieve_images_from_viewport;
+	/* Point of view while rebuilding. */
+	UPROPERTY(EditAnywhere, Category = Playback, AdvancedDisplay, meta = (EditCondition = "!bRecordMode"))
+	ACameraActor* RebuildView;
+	/* This allows you to select which cameras to take into account for generation. It will apply to all JSON files to be generated, and if their number of cameras don't match, all cameras will be generated. */
+	UPROPERTY(EditAnywhere, Category = Playback, AdvancedDisplay, meta = (EditCondition = "!bRecordMode"))
+	TArray<FString> cameras_to_rebuild;
+	/* If checked, different viewmodes images will be saved inside the same camera folder, instead of the oposite. */
+	UPROPERTY(EditAnywhere, Category = Playback, AdvancedDisplay, meta = (EditCondition = "!bRecordMode"))
+	bool SaveViewmodesInsideCameras;
 	/* Number of frames until the next status output. At the beginning of the execution it will be shown more frequently. */
 	UPROPERTY(EditAnywhere, Category = Playback, AdvancedDisplay, meta = (EditCondition = "!bRecordMode"))
 	int frame_status_output_period;
@@ -204,11 +218,15 @@ protected:
 	UMaterial* DepthWUMat;
 	UMaterial* DepthCmMat;
 	UMaterial* NormalMat;
-	ASceneCapture2D* SceneCapture_Depth;
-	ASceneCapture2D* SceneCapture_Lit;
-	ASceneCapture2D* SceneCapture_Normal;
-	ASceneCapture2D* SceneCapture_Mask;
-	UTextureRenderTarget2D* TextureRenderer_Normal;
+	UMaterial* MaskMat;
+	TArray<ASceneCapture2D*> SceneCapture_Depth;
+	TArray<ASceneCapture2D*> SceneCapture_Lit;
+	TArray<ASceneCapture2D*> SceneCapture_Normal;
+	TArray<ASceneCapture2D*> SceneCapture_Mask;
+	ASceneCapture2D* DefaultSceneCapture;
+
+	TMap<AActor*, TArray<FROXMeshComponentMaterials>> MeshMaterials;
+	bool isMaskedMaterial;
 
 	TArray<AActor*> ViewTargets;
 	int CurrentViewTarget;
@@ -263,17 +281,23 @@ public:
 	AActor* CameraPrev();
 	void TakeScreenshot(EROXViewMode vm = EROXViewMode::RVM_Lit);
 	void TakeScreenshotFolder(EROXViewMode vm, FString CameraName);
-	void TakeDepthScreenshotFolder(const FString& FullFilename);
-	void TakeRGBScreenshotFolder(const FString& FullFilename, const EROXViewMode viewmode);
-	void TakeMaskScreenshotFolder(const FString& FullFilename, const EROXViewMode viewmode);
-	void TakeRenderTargetScreenshotFolder(const FString& FullFilename, const EROXViewMode viewmode);
+	void TakeDepthScreenshotFolder(ASceneCapture2D* SceneCapture, const FString& FullFilename);
+	void TakeRenderTargetScreenshotFolder(ASceneCapture2D* SceneCapture, const FString& FullFilename, const EROXViewMode viewmode);
 	void ChangeViewmode(EROXViewMode vm);
 	FString ViewmodeString(EROXViewMode vm);
 	EROXViewMode NextViewmode(EROXViewMode vm);
 	void CacheStaticMeshActors();
+	void PrepareMaterials();
+	void ToggleActorMaterials();
+	FColor AssignColor(int idx_in);
+	int GetIdxFromColor(FColor color);
 	void ChangeViewmodeDelegate(EROXViewMode vm);
 	void TakeScreenshotDelegate(EROXViewMode vm);
+	void TakeScreenshotsRenderTargetDelegate(EROXViewMode vm);
+	void CheckMaterialsAndTakeScreenshotRTDelegate(EROXViewMode vm);
 
+	void SpawnCamerasPlayback(FROXCameraConfig camConfig, int stereo);
+	void SetCamerasAndRenderTargetsLocationAndRotation(int index, FVector NewLocation, FRotator NewRotation);
 	void CacheSceneActors(const TArray<FROXPawnInfo> &PawnsInfo, const TArray<FROXCameraConfig> &CameraConfigs);
 	void DisableGravity();
 	void RestoreGravity();
