@@ -403,6 +403,10 @@ void ROXJsonParser::SceneTxtToJson(FString path, FString txt_filename, FString j
 				Json_FrameObject->SetObjectField("rotation", JsonObjectPitchYawRoll(FloatTxt(line_of[4]), FloatTxt(line_of[5]), FloatTxt(line_of[6])));
 				Json_FrameObject->SetObjectField("boundingbox_min", JsonObjectXYZ(FloatTxt(line_of[7]), FloatTxt(line_of[8]), FloatTxt(line_of[9])));
 				Json_FrameObject->SetObjectField("boundingbox_max", JsonObjectXYZ(FloatTxt(line_of[10]), FloatTxt(line_of[11]), FloatTxt(line_of[12])));
+				if (line_of.Num() > 13)
+				{
+					Json_FrameObject->SetStringField("interaction", line_of[13]);
+				}
 				JsonArray_FrameObjects.Add(MakeShareable(new FJsonValueObject(Json_FrameObject)));
 			}
 			Json_Frames->SetArrayField("objects", JsonArray_FrameObjects);

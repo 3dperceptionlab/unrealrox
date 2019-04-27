@@ -258,7 +258,7 @@ public:
 
 	void WriteHeader();
 	void WriteScene();
-	void PrintInstanceClassJson();
+	FString MeshStateToString(EROXMeshState state);
 	void ToggleRecording();
 
 	FString GetDateTimeString();

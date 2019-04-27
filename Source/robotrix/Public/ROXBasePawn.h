@@ -14,6 +14,7 @@
 #include "GameFramework/Pawn.h"
 #include "MotionControllerComponent.h"
 #include "Haptics/HapticFeedbackEffect_Base.h"
+#include "ROXTypes.h"
 #include "ROXBasePawn.generated.h"
 
 USTRUCT()
@@ -219,6 +220,8 @@ public:
 
 		const float GripDeadZone = 0.15f;
 
+		TMap<AActor*, EROXMeshState> InteractionData;
+
 	//////////////////////////////////////////////
 	///////////////// Functions //////////////////
 	//////////////////////////////////////////////
@@ -227,6 +230,9 @@ public:
 		void GraspRightHand(float Value);
 		/** Left hand trigger input handler**/
 		void GraspLeftHand(float Value);
+
+		TMap<AActor*, EROXMeshState> GetInteractionData();
+		void ResetInteractionData();
 
 	protected:
 		/** Main grasping flow **/
@@ -289,6 +295,12 @@ public:
 		UCapsuleComponent* Pinky_2L;
 
 	protected:
+		UFUNCTION()
+		void OnMeshHit(UPrimitiveComponent * HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult & Hit);
+		/*UFUNCTION()
+		void OnMeshOverlapBegin(UPrimitiveComponent * OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult);
+		UFUNCTION()
+		void OnMeshOverlapEnd(UPrimitiveComponent * OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);*/
 		/** Capsule Collider Overlap Event Handlers **/
 		UFUNCTION()
 		void OnThumb_3ROverlapBegin(UPrimitiveComponent * OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult);

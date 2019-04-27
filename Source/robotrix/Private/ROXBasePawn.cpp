@@ -34,6 +34,9 @@ AROXBasePawn::AROXBasePawn()
 	MeshComponent->SetRelativeRotation(FRotator(0.0f, -90.0f, 0.0f));
 	MeshComponent->bEnableUpdateRateOptimizations = false;
 	MeshComponent->MeshComponentUpdateFlag = EMeshComponentUpdateFlag::AlwaysTickPoseAndRefreshBones;
+	MeshComponent->OnComponentHit.AddDynamic(this, &AROXBasePawn::OnMeshHit);
+	//MeshComponent->OnComponentBeginOverlap.AddDynamic(this, &AROXBasePawn::OnMeshOverlapBegin);
+	//MeshComponent->OnComponentEndOverlap.AddDynamic(this, &AROXBasePawn::OnMeshOverlapEnd);
 
 	VRTripod = CreateDefaultSubobject<USceneComponent>(TEXT("VRTripod"));
 	VRTripod->SetupAttachment(RootComponent);
@@ -215,6 +218,8 @@ void AROXBasePawn::Tick(float DeltaTime)
 		{
 			PawnCameraSub->SetActorTransform(GetPawnCameraTransform());
 		}
+
+		ResetInteractionData();
 	}
 }
 
@@ -377,6 +382,9 @@ void AROXBasePawn::AttachObject(AActor *ObjectToAttach, FName BoneName)
 	);
 
 	ObjectToAttach->GetRootComponent()->SetWorldLocationAndRotation(LocationPrev, RotationPrev);
+
+	if (BoneName == FName("hand_l"))	InteractionData.Emplace(ObjectToAttach, EROXMeshState::RMS_Grasped_L);
+	else								InteractionData.Emplace(ObjectToAttach, EROXMeshState::RMS_Grasped_R);
 }
 
 
@@ -391,6 +399,8 @@ void AROXBasePawn::DetachObject(AActor *ObjectToDetach)
 	check(PrimComp);
 	PrimComp->SetSimulatePhysics(true);
 	PrimComp->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+
+	InteractionData.Remove(ObjectToDetach);
 }
 
 bool AROXBasePawn::SetOverlap(TMap<EHandFinger, bool> &FingerOverlapping, TMap<EHandFinger, bool> &FingerBlocked, EHandFinger Finger, AActor* &OverlappedActor, AActor* &AlreadyOverlappedActor, float CurrentGrip)
@@ -402,6 +412,12 @@ bool AROXBasePawn::SetOverlap(TMap<EHandFinger, bool> &FingerOverlapping, TMap<E
 	{
 		FingerBlocked.Emplace(Finger, true);
 		PrintHUD("Finger overlap: " + EHandFingerToString(Finger));
+	}	
+
+	EROXMeshState* state = InteractionData.Find(OverlappedActor);
+	if (state == nullptr || !(*state == EROXMeshState::RMS_Grasped_L || *state == EROXMeshState::RMS_Grasped_R))
+	{
+		InteractionData.Emplace(OverlappedActor, EROXMeshState::RMS_Interacted);
 	}
 
 	return CurrentGrip >= GripDeadZone;
@@ -445,6 +461,44 @@ FString AROXBasePawn::EHandFingerToString(EHandFinger Finger)
 	}
 	return finger_str;
 }
+
+TMap<AActor*, EROXMeshState> AROXBasePawn::GetInteractionData()
+{
+	return InteractionData;
+}
+
+void AROXBasePawn::ResetInteractionData()
+{
+	TArray<AActor*> MyKeys;
+	InteractionData.GetKeys(MyKeys);
+	for (AActor* Key : MyKeys)
+	{
+		if (*InteractionData.Find(Key) == EROXMeshState::RMS_Body)
+		{
+			InteractionData.Remove(Key);
+		}
+	}
+}
+
+void AROXBasePawn::OnMeshHit(UPrimitiveComponent * HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult & Hit)
+{
+	//UE_LOG(LogUnrealROX, Warning, TEXT("Hit Event"));
+	EROXMeshState* state = InteractionData.Find(OtherActor);
+	if (state == nullptr || !(*state == EROXMeshState::RMS_Grasped_L || *state == EROXMeshState::RMS_Grasped_R || *state == EROXMeshState::RMS_Interacted))
+	{
+		InteractionData.Emplace(OtherActor, EROXMeshState::RMS_Body);
+	}
+}
+
+/*void AROXBasePawn::OnMeshOverlapBegin(UPrimitiveComponent * OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult)
+{
+	UE_LOG(LogUnrealROX, Warning, TEXT("Overlap Begin"));
+}
+
+void AROXBasePawn::OnMeshOverlapEnd(UPrimitiveComponent * OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+	UE_LOG(LogUnrealROX, Warning, TEXT("Overlap End"));
+}*/
 
 void AROXBasePawn::HideHandsCapsuleColliders()
 {

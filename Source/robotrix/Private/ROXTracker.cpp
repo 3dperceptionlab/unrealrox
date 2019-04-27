@@ -480,6 +480,8 @@ void AROXTracker::WriteScene()
 		}
 	}
 
+	TMap<AActor*, EROXMeshState> interaction_data = ControllerPawn->GetInteractionData();
+
 	// StaticMeshActor dump
 	for (auto Itr : CachedSM)
 	{
@@ -488,12 +490,48 @@ void AROXTracker::WriteScene()
 		FVector actor_location_ = Itr->GetActorLocation();
 		FRotator actor_rotation_ = Itr->GetActorRotation();
 
-		ObjectsString += actor_name_ + " " + actor_location_.ToString() + " " + actor_rotation_.ToString()
-			+ " MIN:" + Itr->GetComponentsBoundingBox(true).Min.ToString() + " MAX:" + Itr->GetComponentsBoundingBox(true).Max.ToString() +
-			((bDebugMode) ? (" " + actor_full_name_ + "\r\n") : "\r\n");
+		FString state_str = "None";
+		EROXMeshState* state = interaction_data.Find(Itr);
+		if (state != nullptr)
+		{
+			state_str = MeshStateToString(*state);
+		}
+
+		ObjectsString += actor_name_ + " " + actor_location_.ToString() + " " + actor_rotation_.ToString();
+		ObjectsString += " MIN:" + Itr->GetComponentsBoundingBox(true).Min.ToString() + " MAX:" + Itr->GetComponentsBoundingBox(true).Max.ToString();
+		ObjectsString += " " + state_str + " ";
+		ObjectsString += ((bDebugMode) ? (" " + actor_full_name_ + "\r\n") : "\r\n");
 	}
 	tick_string_ += ObjectsString + SkeletonsString;
 	(new FAutoDeleteAsyncTask<FWriteStringTask>(tick_string_, absolute_file_path))->StartBackgroundTask();
+}
+
+FString AROXTracker::MeshStateToString(EROXMeshState state)
+{
+	FString str("None");
+	switch (state)
+	{
+	case EROXMeshState::RMS_Grasped_L:
+		str = "GraspedL";
+		break;
+	case EROXMeshState::RMS_Grasped_R:
+		str = "GraspedR";
+		break;
+	case EROXMeshState::RMS_Interacted:
+		str = "Interacted";
+		break;
+	case EROXMeshState::RMS_Body:
+		str = "Body";
+		break;
+	case EROXMeshState::RMS_None:
+		str = "None";
+		break;
+	default:
+		str = "None";
+		break;
+	}
+
+	return str;
 }
 
 void AROXTracker::GenerateSequenceJson()

@@ -9,6 +9,16 @@
 
 DECLARE_LOG_CATEGORY_EXTERN(LogUnrealROX, Log, All);
 
+UENUM(BlueprintType)
+enum class EROXMeshState : uint8
+{
+	RMS_Grasped_L		UMETA(DisplayName = "Grasped Left"),
+	RMS_Grasped_R		UMETA(DisplayName = "Grasped Right"),
+	RMS_Interacted		UMETA(DisplayName = "Interacted"),
+	RMS_Body			UMETA(DisplayName = "Body"),
+	RMS_None			UMETA(DisplayName = "None")
+};
+
 USTRUCT()
 struct FROXActorState
 {
