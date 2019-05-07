@@ -268,7 +268,7 @@ public:
 	void VertexColor(FEngineShowFlags& ShowFlags);
 	void PostProcess(FEngineShowFlags& ShowFlags);
 	FEngineShowFlags* GameShowFlags;
-	ASceneCapture2D* SpawnSceneCapture(FString ActorName);
+	ASceneCapture2D* SpawnSceneCapture(FString ActorName, float fov);
 	void SetViewmodeSceneCapture(ASceneCapture2D* SceneCapture, EROXViewMode vm);
 	ASceneCapture2D* GetSceneCapture(EROXViewMode vm);
 

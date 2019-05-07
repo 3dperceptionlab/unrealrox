@@ -918,17 +918,19 @@ void AROXTracker::PostProcess(FEngineShowFlags& ShowFlags)
 	SetVisibility(ShowFlags, PreviousShowFlags); // Store the visibility of the scene, such as folliage and landscape.
 }
 
-ASceneCapture2D* AROXTracker::SpawnSceneCapture(FString ActorName)
+ASceneCapture2D* AROXTracker::SpawnSceneCapture(FString ActorName, float fov)
 {
 	FActorSpawnParameters ActorSpawnParams;
 	ActorSpawnParams.Name = FName(*ActorName);
 	ASceneCapture2D* SceneCapture = GetWorld()->SpawnActor<ASceneCapture2D>(ASceneCapture2D::StaticClass(), ActorSpawnParams);
+	SceneCapture->SetActorLabel(ActorName);
 	SceneCapture->GetCaptureComponent2D()->TextureTarget = NewObject<UTextureRenderTarget2D>();
 	SceneCapture->GetCaptureComponent2D()->TextureTarget->InitAutoFormat(generated_images_width, generated_images_height);
 	SceneCapture->GetCaptureComponent2D()->PostProcessSettings.bOverride_AutoExposureMinBrightness = true;
 	SceneCapture->GetCaptureComponent2D()->PostProcessSettings.bOverride_AutoExposureMaxBrightness = true;
 	SceneCapture->GetCaptureComponent2D()->PostProcessSettings.AutoExposureMinBrightness = 1.0f;
 	SceneCapture->GetCaptureComponent2D()->PostProcessSettings.AutoExposureMaxBrightness = 1.0f;
+	SceneCapture->GetCaptureComponent2D()->FOVAngle = fov;
 	return SceneCapture;
 }
 
@@ -962,8 +964,6 @@ void AROXTracker::SetViewmodeSceneCapture(ASceneCapture2D* SceneCapture, EROXVie
 		SceneCapture->GetCaptureComponent2D()->PostProcessBlendWeight = 1;
 		break;
 	}
-	
-	//SceneCapture->GetCaptureComponent2D()->FOVAngle = ;
 }
 
 ASceneCapture2D* AROXTracker::GetSceneCapture(EROXViewMode vm)
@@ -1353,28 +1353,28 @@ void AROXTracker::SpawnCamerasPlayback(FROXCameraConfig camConfig, int stereo)
 
 	if (generate_rgb)
 	{
-		ASceneCapture2D* SceneCapture_Lit_Aux = SpawnSceneCapture("SceneCaptureLit_" + camConfig.CameraName + stereo_str);
+		ASceneCapture2D* SceneCapture_Lit_Aux = SpawnSceneCapture("SceneCaptureLit_" + camConfig.CameraName + stereo_str, camConfig.FieldOfView);
 		SetViewmodeSceneCapture(SceneCapture_Lit_Aux, EROXViewMode::RVM_Lit);
 		SceneCapture_Lit.Add(SceneCapture_Lit_Aux);
 	}
 	
 	if (generate_depth)
 	{
-		ASceneCapture2D* SceneCapture_Depth_Aux = SpawnSceneCapture("SceneCaptureDepth_" + camConfig.CameraName + stereo_str);
+		ASceneCapture2D* SceneCapture_Depth_Aux = SpawnSceneCapture("SceneCaptureDepth_" + camConfig.CameraName + stereo_str, camConfig.FieldOfView);
 		SetViewmodeSceneCapture(SceneCapture_Depth_Aux, EROXViewMode::RVM_Depth);
 		SceneCapture_Depth.Add(SceneCapture_Depth_Aux);
 	}
 	
 	if (generate_normal)
 	{
-		ASceneCapture2D* SceneCapture_Normal_Aux = SpawnSceneCapture("SceneCaptureNormal_" + camConfig.CameraName + stereo_str);
+		ASceneCapture2D* SceneCapture_Normal_Aux = SpawnSceneCapture("SceneCaptureNormal_" + camConfig.CameraName + stereo_str, camConfig.FieldOfView);
 		SetViewmodeSceneCapture(SceneCapture_Normal_Aux, EROXViewMode::RVM_Normal);
 		SceneCapture_Normal.Add(SceneCapture_Normal_Aux);
 	}
 
 	if (generate_object_mask)
 	{
-		ASceneCapture2D* SceneCapture_Mask_Aux = SpawnSceneCapture("SceneCaptureMask_" + camConfig.CameraName + stereo_str);
+		ASceneCapture2D* SceneCapture_Mask_Aux = SpawnSceneCapture("SceneCaptureMask_" + camConfig.CameraName + stereo_str, camConfig.FieldOfView);
 		SetViewmodeSceneCapture(SceneCapture_Mask_Aux, EROXViewMode::RVM_ObjectMask);
 		SceneCapture_Mask.Add(SceneCapture_Mask_Aux);
 	}
@@ -1407,7 +1407,7 @@ void AROXTracker::CacheSceneActors(const TArray<FROXPawnInfo> &PawnsInfo, const 
 	SceneCapture_Normal.Empty();
 	SceneCapture_Mask.Empty();
 
-	DefaultSceneCapture = SpawnSceneCapture("DefaultSceneCapture");
+	DefaultSceneCapture = SpawnSceneCapture("DefaultSceneCapture", 90);
 	SetViewmodeSceneCapture(DefaultSceneCapture, EROXViewMode::RVM_Lit);
 
 	/*for (TActorIterator <ACameraActor> ActorItr(GetWorld()); ActorItr; ++ActorItr)
