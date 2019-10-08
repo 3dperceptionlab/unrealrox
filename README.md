@@ -8,20 +8,20 @@ Visit the [ReadTheDocs](https://unrealrox.readthedocs.io/en/latest/) website for
 
 ## Paper
 
-Pablo Martinez-Gonzalez, Sergiu Oprea, Alberto Garcia-Garcia, Alvaro Jover-Alvarez, Sergio Orts-Escolano, Jose Garcia-Rodriguez
-[UnrealROX: An eXtremely Photorealistic Virtual Reality Environment for Robotics Simulations and Synthetic Data Generation](https://arxiv.org/abs/1810.06936)
-Submitted to Virtual Reality journal.
-
+Pablo Martinez-Gonzalez, Sergiu Oprea, Alberto Garcia-Garcia, Alvaro Jover-Alvarez, Sergio Orts-Escolano, Jose Garcia-Rodriguez <br>
+[UnrealROX: An eXtremely Photorealistic Virtual Reality Environment for Robotics Simulations and Synthetic Data Generation](https://doi.org/10.1007/s10055-019-00399-5) <br> Published in Virtual Reality journal. <br> Also available on [ArXiv](https://arxiv.org/abs/1810.06936).
 
 If you use UnrealROX, please cite:
 
 ```
-@article{Unrealrox2018,,
+@article{Unrealrox2019,,
   title={{UnrealROX}: An eXtremely Photorealistic Virtual Reality Environment for Robotics Simulations and Synthetic Data Generation},
   author={Martinez-Gonzalez, Pablo and Oprea, Sergiu and Garcia-Garcia, Alberto and Jover-Alvarez, Alvaro and Orts-Escolano, Sergio and Garcia-Rodriguez, Jose},
-  journal={ArXiv e-prints},
-  eprint = {1810.06936},
-  year={2018}
+  journal={Virtual Reality},
+  issn="1434-9957",
+  doi="10.1007/s10055-019-00399-5",
+  url="https://doi.org/10.1007/s10055-019-00399-5",
+  year={2019}
 }
 ```
 
