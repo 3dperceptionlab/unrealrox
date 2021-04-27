@@ -14,7 +14,7 @@ Pablo Martinez-Gonzalez, Sergiu Oprea, Alberto Garcia-Garcia, Alvaro Jover-Alvar
 If you use UnrealROX, please cite:
 
 ```
-@article{Unrealrox2019,,
+@article{Martinez2019unrealrox,
   title={{UnrealROX}: An eXtremely Photorealistic Virtual Reality Environment for Robotics Simulations and Synthetic Data Generation},
   author={Martinez-Gonzalez, Pablo and Oprea, Sergiu and Garcia-Garcia, Alberto and Jover-Alvarez, Alvaro and Orts-Escolano, Sergio and Garcia-Rodriguez, Jose},
   journal={Virtual Reality},
